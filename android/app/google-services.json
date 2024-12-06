@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "852135500460",
+    "project_id": "vendini-337ac",
+    "storage_bucket": "vendini-337ac.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:852135500460:android:cbb6477ca9b492ee699d09",
+        "android_client_info": {
+          "package_name": "vendini.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBNqKKwGWrYG6h-bul7TY5bUdXdYMXmKtI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
