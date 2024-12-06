@@ -5,9 +5,9 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:image_picker/image_picker.dart';
-import 'dart:html' as html;
-import 'package:flutter/foundation.dart'; // Pour kIsWeb
-import 'dart:typed_data'; // Pour Uint8List
+import 'package:flutter/foundation.dart';
+import 'package:permission_handler/permission_handler.dart'; // Pour kIsWeb
+// Pour Uint8List
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -39,7 +39,7 @@ class AddProductPage extends StatefulWidget {
 
 class _AddProductPageState extends State<AddProductPage> {
   final ImagePicker _picker = ImagePicker();
-  XFile? _image;
+  File? _selectedImage;
   final TextEditingController _labelController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
   final TextEditingController _priceController = TextEditingController();
@@ -47,46 +47,100 @@ class _AddProductPageState extends State<AddProductPage> {
   final TextEditingController _sizeController = TextEditingController();
   final TextEditingController _conditionController = TextEditingController();
   final TextEditingController _warrantyController = TextEditingController();
+  //
+  // // Fonction pour sélectionner une image
+  // Future<void> _pickImage() async {
+  //   if (kIsWeb) {
+  //     // Pour le Web, utiliser dart:html pour sélectionner une image
+  //     final html.FileUploadInputElement input = html.FileUploadInputElement();
+  //     input.accept = 'image/*'; // Accepter uniquement les images
+  //     input.click(); // Ouvrir la boîte de dialogue de sélection de fichier
+  //
+  //     input.onChange.listen((e) async {
+  //       final files = input.files;
+  //       if (files!.isEmpty) return;
+  //
+  //       // Lire l'image sélectionnée et la convertir en base64
+  //       final reader = html.FileReader();
+  //       reader.readAsDataUrl(files[0]);
+  //       reader.onLoadEnd.listen((e) {
+  //         setState(() {
+  //           _image = XFile(reader.result.toString());
+  //         });
+  //       });
+  //     });
+  //   } else {
+  //     // Pour mobile, utiliser ImagePicker pour choisir une image
+  //     final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
+  //     setState(() {
+  //       _image = image;
+  //     });
+  //   }
+  // }
 
-  // Fonction pour sélectionner une image
-  Future<void> _pickImage() async {
-    if (kIsWeb) {
-      // Pour le Web, utiliser dart:html pour sélectionner une image
-      final html.FileUploadInputElement input = html.FileUploadInputElement();
-      input.accept = 'image/*'; // Accepter uniquement les images
-      input.click(); // Ouvrir la boîte de dialogue de sélection de fichier
+  Future<void> _checkPermission() async {
+    var status = await Permission.storage.status;
+    var cameraStatus = await Permission.camera.status;
+    if (!status.isGranted) {
+      await Permission.storage.request();
+    }
+    if (!cameraStatus.isGranted) {
+      await Permission.camera.request();
+    }
+  }
 
-      input.onChange.listen((e) async {
-        final files = input.files;
-        if (files!.isEmpty) return;
+  Future<void> _pickImage(ImageSource source) async {
+    await _checkPermission();
+    final pickedFile = await ImagePicker().pickImage(source: source);
 
-        // Lire l'image sélectionnée et la convertir en base64
-        final reader = html.FileReader();
-        reader.readAsDataUrl(files[0]);
-        reader.onLoadEnd.listen((e) {
-          setState(() {
-            _image = XFile(reader.result.toString());
-          });
-        });
-      });
-    } else {
-      // Pour mobile, utiliser ImagePicker pour choisir une image
-      final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
+    if (pickedFile != null) {
       setState(() {
-        _image = image;
+        _selectedImage = File(pickedFile.path);
       });
     }
   }
 
+  void _showSelectImageDialog() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Choisir une image'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: const Icon(Icons.camera_alt),
+                title: const Text('Prendre une photo'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _pickImage(ImageSource.camera);
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.photo_library),
+                title: const Text('Choisir une photo'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _pickImage(ImageSource.gallery);
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   // Fonction pour uploader le produit
   Future<void> _uploadProduct() async {
-    if (_image == null) return;
+    if (_selectedImage == null) return;
 
     try {
       // Pour le Web, convertir l'image base64 en fichier
       String imageUrl = '';
       if (kIsWeb) {
-        final bytes = Uri.parse(_image!.path).data!.contentAsBytes();
+        final bytes = Uri.parse(_selectedImage!.path).data!.contentAsBytes();
         final storageRef = FirebaseStorage.instance
             .ref()
             .child('products/${DateTime.now().millisecondsSinceEpoch}');
@@ -97,7 +151,7 @@ class _AddProductPageState extends State<AddProductPage> {
         String fileName = DateTime.now().millisecondsSinceEpoch.toString();
         Reference storageRef =
             FirebaseStorage.instance.ref().child('products/$fileName');
-        await storageRef.putFile(File(_image!.path));
+        await storageRef.putFile(File(_selectedImage!.path));
         imageUrl = await storageRef.getDownloadURL();
       }
 
@@ -174,7 +228,7 @@ class _AddProductPageState extends State<AddProductPage> {
                           children: [
                             // Zone pour ajouter une image (plus grande)
                             GestureDetector(
-                              onTap: _pickImage,
+                              onTap: _showSelectImageDialog,
                               child: Container(
                                 height:
                                     250, // Augmenté pour une zone plus grande
@@ -183,7 +237,7 @@ class _AddProductPageState extends State<AddProductPage> {
                                   color: const Color(0xFFF4CBC7),
                                   borderRadius: BorderRadius.circular(15),
                                 ),
-                                child: _image == null
+                                child: _selectedImage == null
                                     ? const Column(
                                         mainAxisAlignment:
                                             MainAxisAlignment.center,
@@ -198,9 +252,9 @@ class _AddProductPageState extends State<AddProductPage> {
                                         ],
                                       )
                                     : kIsWeb
-                                        ? Image.network(_image!.path,
+                                        ? Image.network(_selectedImage!.path,
                                             fit: BoxFit.cover)
-                                        : Image.file(File(_image!.path),
+                                        : Image.file(File(_selectedImage!.path),
                                             fit: BoxFit.cover),
                               ),
                             ),

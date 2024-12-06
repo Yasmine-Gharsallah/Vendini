@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'dart:ui';
 
@@ -9,6 +11,12 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance; // Firestore instance
+  String? _userName;
+  String? _userProfileImage;
+  bool isLoading = true;
+
   final List<Map<String, String>> _scrollProducts = [
     {'name': 'Produit 1', 'price': '20 TND', 'image': 'assets/images/1.png'},
     {'name': 'Produit 2', 'price': '40 TND', 'image': 'assets/images/2.png'},
@@ -35,6 +43,7 @@ class _HomePageState extends State<HomePage> {
     super.initState();
     _filteredProducts = List.from(_blurProducts);
     _searchController.addListener(_filterProducts);
+    _initUser();
   }
 
   @override
@@ -42,6 +51,28 @@ class _HomePageState extends State<HomePage> {
     _searchController.removeListener(_filterProducts);
     _searchController.dispose();
     super.dispose();
+  }
+
+  Future<void> _initUser() async {
+    User? user = _auth.currentUser;
+    if (user != null) {
+      try {
+        DocumentSnapshot userDoc = await _firestore
+            .collection('users')
+            .doc(user.uid)
+            .get();
+
+        if (userDoc.exists) {
+          setState(() {
+            _userName = userDoc['nom'] + userDoc['prenom'] ?? 'User';
+            _userProfileImage = userDoc['profileImage'] ?? 'assets/images/default_profile.png';
+            isLoading = false;
+          });
+        }
+      } catch (e) {
+        print('Error retrieving user data: $e');
+      }
+    }
   }
 
   void _filterProducts() {
@@ -55,19 +86,29 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
+
+    if(isLoading) {
+      return Scaffold(
+        body: Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+
     return Scaffold(
       drawer: _buildDrawer(),
       appBar: AppBar(
         backgroundColor: const Color(0xFFFCDFDB),
-        title: const Row(
+        title: Row(
           children: [
             CircleAvatar(
               radius: 20,
-              backgroundImage: AssetImage('assets/images/profile.png'),
+              backgroundImage: _userProfileImage != null ?
+                  NetworkImage(_userProfileImage!) : AssetImage("assets/profile.png"),
             ),
             SizedBox(width: 10),
             Text(
-              'Yosr Ezzeddine',
+              _userName ?? "",
               style: TextStyle(
                 color: Colors.white,
                 fontWeight: FontWeight.bold,

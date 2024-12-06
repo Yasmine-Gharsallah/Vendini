@@ -32,7 +32,6 @@ class InscriptionPage extends StatefulWidget {
 
 class _InscriptionPageState extends State<InscriptionPage> {
   File? _imageFile;
-  File? _selectedImage;
   bool _privacyAccepted = false;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
@@ -127,7 +126,7 @@ class _InscriptionPageState extends State<InscriptionPage> {
 
     if (pickedFile != null) {
       setState(() {
-        _selectedImage = File(pickedFile.path);
+        _imageFile = File(pickedFile.path);
       });
     }
   }
@@ -162,7 +161,7 @@ class _InscriptionPageState extends State<InscriptionPage> {
 
   Future<String?> _uploadImage() async {
     _checkPermission();
-    if (_selectedImage != null) {
+    if (_imageFile != null) {
       final uploadUrl = await _uploadImageToImgur(_imageFile!);
       return uploadUrl;
     }
@@ -232,7 +231,7 @@ class _InscriptionPageState extends State<InscriptionPage> {
       return;
     }
 
-    if (_selectedImage == null) {
+    if (_imageFile == null) {
       _showSelectImageDialog();
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Veuillez sélectionner une image.')),
@@ -289,7 +288,7 @@ class _InscriptionPageState extends State<InscriptionPage> {
         children: [
           // Image de fond fixe
           Positioned.fill(
-            child: Image.asset(
+            child: _imageFile != null ? Image.file(_imageFile!):Image.asset(
               'assets/images/backgroundd.png',
               fit: BoxFit.cover,
             ),

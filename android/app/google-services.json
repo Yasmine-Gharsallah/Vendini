@@ -7,6 +7,25 @@
   "client": [
     {
       "client_info": {
+        "mobilesdk_app_id": "1:852135500460:android:752cd8604b23a50c699d09",
+        "android_client_info": {
+          "package_name": "com.example.vendini"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBNqKKwGWrYG6h-bul7TY5bUdXdYMXmKtI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
         "mobilesdk_app_id": "1:852135500460:android:cbb6477ca9b492ee699d09",
         "android_client_info": {
           "package_name": "vendini.app"
