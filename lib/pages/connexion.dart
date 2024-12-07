@@ -4,6 +4,8 @@ import 'package:vendini/pages/home.dart' as home;
 import 'package:vendini/pages/inscription.dart';
 
 class LoginPage extends StatefulWidget {
+  const LoginPage({super.key});
+
   @override
   _LoginPageState createState() => _LoginPageState();
 }

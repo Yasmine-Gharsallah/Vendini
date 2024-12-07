@@ -74,13 +74,36 @@ class _HomePageState extends State<HomePage> {
       }
     }
   }
+  void _filterByCategory(String category) {
+    setState(() {
+      if (category == 'Vêtement') {
+        _filteredProducts = _blurProducts
+            .where((product) =>
+                product['image'] == 'assets/images/4.png' ||
+                product['image'] == 'assets/images/5.png')
+            .toList();
+      } else if (category == 'Meuble') {
+        _filteredProducts = _blurProducts
+            .where((product) => product['image'] == 'assets/images/7.png')
+            .toList();
+      } else if (category == 'Livres') {
+        _filteredProducts = _blurProducts
+            .where((product) => product['image'] == 'assets/images/6.png')
+            .toList();
+      } else if (category == 'Vaisselle' || category == 'Électroménager') {
+        _filteredProducts = [];
+      }
+    });
+  }
 
   void _filterProducts() {
     final query = _searchController.text.toLowerCase();
     setState(() {
       _filteredProducts = _blurProducts
-          .where((product) => product['name']!.toLowerCase().contains(query))
-          .toList();
+           .where((product) =>
+            product['name']!.toLowerCase().contains(query) || 
+            product['price']!.contains(query)) // Ajout pour permettre de filtrer aussi par prix
+        .toList();
     });
   }
 
@@ -310,42 +333,49 @@ class _HomePageState extends State<HomePage> {
   Widget _buildDrawer() {
     return Drawer(
       child: ListView(
-        padding: EdgeInsets.zero,
-        children: <Widget>[
-          const DrawerHeader(
+        children: [
+          DrawerHeader(
             decoration: BoxDecoration(
-              color: Color(0xFFFCDFDB),
+              color: const Color.fromARGB(255, 237, 188, 223),
             ),
             child: Text(
               'Catégories',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 24,
-              ),
+              style: TextStyle(color: Colors.white, fontSize: 24),
             ),
           ),
           ListTile(
-            title: const Text('Vêtements'),
+            title: Text('Vêtement'),
             onTap: () {
               Navigator.pop(context);
+              _filterByCategory('Vêtement');
             },
           ),
           ListTile(
-            title: const Text('Meubles'),
+            title: Text('Meuble'),
             onTap: () {
               Navigator.pop(context);
+              _filterByCategory('Meuble');
             },
           ),
           ListTile(
-            title: const Text('Vaiselle'),
+            title: Text('Livres'),
             onTap: () {
               Navigator.pop(context);
+              _filterByCategory('Livres');
             },
           ),
           ListTile(
-            title: const Text('Electroménager'),
+            title: Text('Vaisselle'),
             onTap: () {
               Navigator.pop(context);
+              _filterByCategory('Vaisselle');
+            },
+          ),
+          ListTile(
+            title: Text('Électroménager'),
+            onTap: () {
+              Navigator.pop(context);
+              _filterByCategory('Électroménager');
             },
           ),
         ],
@@ -450,7 +480,13 @@ class _HomePageState extends State<HomePage> {
       {bool showDiscount = false,
       bool hideDetails = false,
       bool showCartIcon = false}) {
-    return Padding(
+     return GestureDetector(
+    onTap: () {
+      if (imagePath == 'assets/images/4.png') {
+        Navigator.pushNamed(context, '/infoProd'); // Navigation vers InfoProd
+      }
+    },
+    child: Padding(
       padding: EdgeInsets.symmetric(
           horizontal:
               MediaQuery.of(context).size.width * 0.04), // Padding dynamique
@@ -465,10 +501,8 @@ class _HomePageState extends State<HomePage> {
               borderRadius: BorderRadius.circular(10),
               child: Image.asset(
                 imagePath,
-                width: MediaQuery.of(context).size.width *
-                    0.4, // 40% de la largeur de l'écran
-                height: MediaQuery.of(context).size.height *
-                    0.2, // 20% de la hauteur de l'écran
+                width: MediaQuery.of(context).size.width * 0.4,
+                height: MediaQuery.of(context).size.height * 0.2,
                 fit: BoxFit.cover,
               ),
             ),
@@ -496,13 +530,21 @@ class _HomePageState extends State<HomePage> {
                   children: [
                     Text(
                       productName,
-                      style: const TextStyle(
-                          color: Colors.black, fontWeight: FontWeight.bold),
+                       style: const TextStyle(
+    color: Color.fromARGB(255, 251, 251, 251), // Noir pur pour le contraste
+    fontWeight: FontWeight.bold, // Texte en gras
+    fontSize: 16, // Taille du texte ajustée pour plus de lisibilité
+  ),
                     ),
                     Text(
-                      price,
-                      style: const TextStyle(color: Colors.grey),
-                    ),
+  price,
+  style: const TextStyle(
+    color: Color.fromARGB(255, 143, 131, 131), // Noir pur pour le contraste
+    fontWeight: FontWeight.bold, // Texte en gras
+    fontSize: 16, // Taille du texte ajustée pour plus de lisibilité
+  ),
+),
+
                   ],
                 ),
               ),
@@ -525,6 +567,6 @@ class _HomePageState extends State<HomePage> {
           ],
         ),
       ),
-    );
-  }
+    )
+  );}
 }

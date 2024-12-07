@@ -9,11 +9,11 @@ class Infprod extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       home: Scaffold(
         body: Container(
-          // *** Image de fond de l'écran ***
+          height: double.infinity, // Prendre toute la hauteur
+          width: double.infinity,  // Prendre toute la largeur
           decoration: const BoxDecoration(
             image: DecorationImage(
-              image: AssetImage(
-                  'assets/images/background.png'), // Remplacez 'image' par le chemin de votre image de fond
+              image: AssetImage('assets/images/background.png'),
               fit: BoxFit.cover,
             ),
           ),
@@ -24,7 +24,7 @@ class Infprod extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    // *** Carte du produit avec l'image et les informations à droite ***
+                    // Carte du produit
                     Card(
                       elevation: 5,
                       shape: RoundedRectangleBorder(
@@ -35,23 +35,20 @@ class Infprod extends StatelessWidget {
                         child: Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            // *** Image du produit ***
                             ClipRRect(
                               borderRadius: BorderRadius.circular(12),
                               child: Image.asset(
-                                '/assets/images/4.png', // Remplacez par votre image produit
+                                'assets/images/4.png',
                                 height: 150,
                                 width: 150,
                                 fit: BoxFit.cover,
                               ),
                             ),
                             const SizedBox(width: 12),
-                            // *** Informations (Titre, Vendeur, Numéro, Étoiles) à droite de l'image ***
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  // *** Titre du produit ***
                                   const Text(
                                     'Pyjama d’été',
                                     style: TextStyle(
@@ -62,25 +59,26 @@ class Infprod extends StatelessWidget {
                                     ),
                                   ),
                                   const SizedBox(height: 8),
-
-                                  // *** Informations sur le vendeur (photo et nom + numéro) ***
                                   Row(
                                     children: [
-                                      // *** Photo du vendeur ***
-                                      const CircleAvatar(
-                                        radius: 20,
-                                        backgroundImage: AssetImage(
-                                            'assets/images/girl.png'), // Remplacez par l'image du vendeur
+                                      GestureDetector(
+                                        onTap: () {
+                                          Navigator.pushNamed(
+                                              context, '/vendeur');
+                                        },
+                                        child: const CircleAvatar(
+                                          radius: 20,
+                                          backgroundImage: AssetImage(
+                                              'assets/images/girl.png'),
+                                        ),
                                       ),
                                       const SizedBox(width: 8),
-
-                                      // *** Nom du vendeur et numéro de téléphone ***
                                       Column(
                                         crossAxisAlignment:
                                             CrossAxisAlignment.start,
                                         children: [
                                           const Text(
-                                            'nour vendeuse',
+                                            'Nour Vendini',
                                             style: TextStyle(
                                               fontSize: 14,
                                               fontWeight: FontWeight.w500,
@@ -98,8 +96,6 @@ class Infprod extends StatelessWidget {
                                     ],
                                   ),
                                   const SizedBox(height: 10),
-
-                                  // *** Évaluation (étoiles) ***
                                   Row(
                                     children: List.generate(4, (index) {
                                       return const Icon(Icons.star,
@@ -117,15 +113,11 @@ class Infprod extends StatelessWidget {
                         ),
                       ),
                     ),
-
                     const SizedBox(height: 20),
-
-                    // *** Informations relatives à l'article ***
                     Container(
                       padding: const EdgeInsets.all(15),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(
-                            0.9), // Transparence pour voir l'arrière-plan
+                        color: Colors.white.withOpacity(0.9),
                         borderRadius: BorderRadius.circular(12),
                         boxShadow: [
                           BoxShadow(
@@ -138,21 +130,16 @@ class Infprod extends StatelessWidget {
                       child: const Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // Titre : Informations relatives à l’article
                           Text(
                             'Informations relatives à l’article',
                             style: TextStyle(
                               fontFamily: 'Frank Ruhl Libre',
-                              fontSize: 18, // Taille du titre augmentée
+                              fontSize: 18,
                               fontWeight: FontWeight.bold,
-                              color: Color(0xFFB80D75), // Couleur personnalisée
+                              color: Color(0xFFB80D75),
                             ),
                           ),
-                          SizedBox(
-                              height:
-                                  10), // Espace entre le titre et les détails
-
-                          // Les détails sous forme de colonnes bien organisées
+                          SizedBox(height: 10),
                           Text(
                             'Catégorie: vêtements\n'
                             'Taille: S\n'
@@ -168,16 +155,12 @@ class Infprod extends StatelessWidget {
                         ],
                       ),
                     ),
-
                     const SizedBox(height: 20),
-
-                    // *** Section Prix ***
                     Container(
                       padding: const EdgeInsets.symmetric(
                           vertical: 15, horizontal: 20),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(
-                            0.9), // Transparence pour voir l'arrière-plan
+                        color: Colors.white.withOpacity(0.9),
                         borderRadius: BorderRadius.circular(12),
                         boxShadow: [
                           BoxShadow(
@@ -207,17 +190,11 @@ class Infprod extends StatelessWidget {
                         ],
                       ),
                     ),
-
                     const SizedBox(height: 30),
-
-                    // *** Bouton Ajouter au panier ***
                     ElevatedButton(
-                      onPressed: () {
-                        // Action du bouton
-                      },
+                      onPressed: () {},
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(
-                            0xFFB80D75), // Utilisation de backgroundColor au lieu de 'primary'
+                        backgroundColor: const Color(0xFFB80D75),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(24),
                         ),

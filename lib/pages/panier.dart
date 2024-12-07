@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 class PanierPage extends StatefulWidget {
+  const PanierPage({super.key});
+
   @override
   _PanierPageState createState() => _PanierPageState();
 }

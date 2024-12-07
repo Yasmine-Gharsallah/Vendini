@@ -16,6 +16,8 @@ void main() async {
 }
 
 class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -26,6 +28,8 @@ class MyApp extends StatelessWidget {
 }
 
 class InscriptionPage extends StatefulWidget {
+  const InscriptionPage({super.key});
+
   @override
   _InscriptionPageState createState() => _InscriptionPageState();
 }

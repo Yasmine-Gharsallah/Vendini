@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:vendini/pages/connexion.dart';
 import 'package:vendini/pages/paiement.dart';
+import 'package:vendini/pages/vendeur.dart';
 import 'firebase_options.dart'; // Assurez-vous que ce fichier est généré et à jour
 
 import 'package:vendini/pages/splash_screen.dart';
@@ -36,6 +37,8 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       home: const SplashScreen(), // Page d'accueil initiale
       routes: {
+        '/vendeur': (context) => const Vendeur(),
+        '/infoProd': (context) => Infprod(),
         '/addProduct': (context) =>
             const AddProductPage(), // Route pour ajouter un produit
         '/history': (context) =>
