@@ -43,6 +43,83 @@ class _InscriptionPageState extends State<InscriptionPage> {
   final TextEditingController _confirmerMotdepasseController =
       TextEditingController();
 
+  // Future<void> _signup() async {
+  //   if (_formKey.currentState!.validate()) {
+  //     if (_selectedGender == null) {
+  //       ScaffoldMessenger.of(context).showSnackBar(
+  //         const SnackBar(content: Text('Veuillez sélectionner un genre.')),
+  //       );
+  //       return;
+  //     }
+  //     if (role == null) {
+  //       ScaffoldMessenger.of(context).showSnackBar(
+  //         const SnackBar(content: Text('Veuillez sélectionner un rôle.')),
+  //       );
+  //       return;
+  //     }
+
+  //     if (_selectedImage == null) {
+  //       _showSelectImageDialog();
+  //       ScaffoldMessenger.of(context).showSnackBar(
+  //         const SnackBar(content: Text('Veuillez sélectionner une image.')),
+  //       );
+  //       return;
+  //     }
+
+  //     try {
+  //       setState(() {
+  //         _isLoading = true;
+  //       });
+  //       userCredential = await _auth.createUserWithEmailAndPassword(
+  //         email: _emailController.text.trim(),
+  //         password: _passwordController.text.trim(),
+  //       );
+
+  //       int cin = int.parse(_cinController.text.trim());
+  //       DateTime date = DateTime.parse(_dobController.text.trim());
+  //       Gender gender = _selectedGender == "Male" ? Gender.MALE : Gender.FEMALE;
+
+  //       String? profileImageUrl = await _uploadImage();
+
+  //       UserModel user = UserModel(
+  //         id: userCredential!.user!.uid,
+  //         username: _nameController.text.trim(),
+  //         cin: cin,
+  //         birthday: date,
+  //         phoneNumber: _phoneController.text.trim(),
+  //         role: role ?? Role.PATIENT,
+  //         profilePicture: profileImageUrl,
+  //         gender: gender,
+  //       );
+
+  //       await _firestore
+  //           .collection('users')
+  //           .doc(user.id)
+  //           .set(user.toFirestore());
+  //       setState(() {
+  //         _isLoading = false;
+  //       });
+  //       GlobalController().setCurrentUser(user);
+  //       if (mounted) {
+  //         ScaffoldMessenger.of(context).showSnackBar(
+  //           const SnackBar(content: Text('Inscription réussie!')),
+  //         );
+  //       }
+  //       Navigator.pushReplacement(
+  //         context,
+  //         MaterialPageRoute(builder: (context) => const LoginPage()),
+  //       );
+  //     } on FirebaseAuthException catch (e) {
+  //       if (mounted) {
+  //         ScaffoldMessenger.of(context).showSnackBar(
+  //           SnackBar(
+  //               content: Text(e.message ?? "Error occurred during signup.")),
+  //         );
+  //       }
+  //     }
+  //   }
+  // }
+
   Future<void> _pickImage(ImageSource source) async {
     await _checkPermission();
     final pickedFile = await ImagePicker().pickImage(source: source);
@@ -206,32 +283,25 @@ class _InscriptionPageState extends State<InscriptionPage> {
 
   @override
   Widget build(BuildContext context) {
-    // Obtenir la taille de l'écran
-    final screenWidth = MediaQuery.of(context).size.width;
-    final screenHeight = MediaQuery.of(context).size.height;
-
     return Scaffold(
       body: Stack(
         children: [
-          // Fond d'écran couvrant tout l'écran
+          // Image de fond fixe
           Positioned.fill(
-            child: Image.asset(
-              'assets/images/backgroundd.png',
-              fit: BoxFit.cover,
-            ),
+            child: _imageFile != null
+                ? Image.file(_imageFile!)
+                : Image.asset(
+                    'assets/images/backgroundd.png',
+                    fit: BoxFit.cover,
+                  ),
           ),
-
           SingleChildScrollView(
             child: Padding(
-              // Padding en pourcentage
-              padding: EdgeInsets.symmetric(
-                  horizontal: screenWidth * 0.05,
-                  vertical: screenHeight * 0.05),
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 20.0, vertical: 40.0),
               child: Center(
                 child: Container(
-                  // Largeur en pourcentage
-                  width: screenWidth * 0.9,
-                  padding: EdgeInsets.all(screenWidth * 0.05),
+                  padding: const EdgeInsets.all(20.0),
                   decoration: BoxDecoration(
                     color: Colors.white.withOpacity(0.6),
                     borderRadius: BorderRadius.circular(16),
@@ -245,53 +315,47 @@ class _InscriptionPageState extends State<InscriptionPage> {
                       ),
                     ],
                   ),
+                  width: 350,
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      // Titre avec taille de police adaptative
-                      Text(
+                      const Text(
                         'Création de compte',
                         style: TextStyle(
-                          fontSize:
-                              screenWidth * 0.07, // Taille de police dynamique
+                          fontSize: 28,
                           fontWeight: FontWeight.w700,
                           color: Color(0xFFb80d57),
                         ),
                       ),
-
-                      // Avatar avec taille dynamique
                       Stack(
                         clipBehavior: Clip.none,
                         children: [
                           CircleAvatar(
-                            // Rayon basé sur la largeur de l'écran
-                            radius: screenWidth * 0.12,
+                            radius: 50,
                             backgroundColor:
                                 const Color.fromARGB(255, 243, 171, 170),
                             child: _imageFile == null
-                                ? Icon(
+                                ? const Icon(
                                     Icons.person,
-                                    size:
-                                        screenWidth * 0.12, // Taille dynamique
+                                    size: 50,
                                     color: Color.fromARGB(255, 157, 16, 70),
                                   )
                                 : ClipOval(
                                     child: Image.file(
                                       _imageFile!,
                                       fit: BoxFit.cover,
-                                      width: screenWidth * 0.24,
-                                      height: screenWidth * 0.24,
+                                      width: 100,
+                                      height: 100,
                                     ),
                                   ),
                           ),
-                          // Bouton caméra avec positionnement et taille dynamiques
                           Positioned(
-                            right: -screenWidth * 0.02,
-                            bottom: -screenWidth * 0.02,
+                            right: -10,
+                            bottom: -10,
                             child: IconButton(
-                              icon: Icon(
+                              icon: const Icon(
                                 Icons.camera_alt,
-                                size: screenWidth * 0.07,
+                                size: 28,
                                 color: Color.fromARGB(255, 88, 2, 39),
                               ),
                               onPressed: _showSelectImageDialog,
@@ -299,31 +363,24 @@ class _InscriptionPageState extends State<InscriptionPage> {
                           ),
                         ],
                       ),
-
-                      // Espacement dynamique
-                      SizedBox(height: screenHeight * 0.03),
-
-                      // Champs de texte avec largeurs et espacements dynamiques
-                      _buildTextField(context, "Nom", _nomController),
-                      SizedBox(height: screenHeight * 0.02),
-                      _buildTextField(context, "Prénom", _prenomController),
-                      SizedBox(height: screenHeight * 0.02),
-                      _buildTextField(context, "Email", _emailController,
+                      const SizedBox(height: 30),
+                      _buildTextField("Nom", _nomController),
+                      const SizedBox(height: 15),
+                      _buildTextField("Prénom", _prenomController),
+                      const SizedBox(height: 15),
+                      _buildTextField("Email", _emailController,
                           keyboardType: TextInputType.emailAddress),
-                      SizedBox(height: screenHeight * 0.02),
-                      _buildTextField(
-                          context, "Téléphone", _telephoneController,
+                      const SizedBox(height: 15),
+                      _buildTextField("Téléphone", _telephoneController,
                           keyboardType: TextInputType.phone),
-                      SizedBox(height: screenHeight * 0.02),
-                      _buildTextField(
-                          context, "Mot de Passe", _motdepasseController,
+                      const SizedBox(height: 15),
+                      _buildTextField("Mot de Passe", _motdepasseController,
                           obscureText: true),
-                      SizedBox(height: screenHeight * 0.02),
-                      _buildTextField(context, "Confirmer le mot de passe",
+                      const SizedBox(height: 15),
+                      _buildTextField("Confirmer le mot de passe",
                           _confirmerMotdepasseController,
                           obscureText: true),
-
-                      // Politique de confidentialité avec taille dynamique
+                      const SizedBox(height: 20),
                       Row(
                         children: [
                           Checkbox(
@@ -334,19 +391,15 @@ class _InscriptionPageState extends State<InscriptionPage> {
                               });
                             },
                           ),
-                          Flexible(
+                          const Flexible(
                             child: Text(
                               'Accepter la politique de confidentialité',
-                              style: TextStyle(
-                                  fontSize: screenWidth *
-                                      0.035 // Taille de police dynamique
-                                  ),
+                              style: TextStyle(fontSize: 14),
                             ),
                           ),
                         ],
                       ),
-
-                      // Bouton avec dimensions dynamiques
+                      const SizedBox(height: 20),
                       ElevatedButton(
                         onPressed: () {
                           if (_privacyAccepted) {
@@ -362,19 +415,17 @@ class _InscriptionPageState extends State<InscriptionPage> {
                         },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFFb80d57),
-                          padding: EdgeInsets.symmetric(
-                              vertical: screenHeight * 0.02,
-                              horizontal: screenWidth * 0.05),
+                          padding: const EdgeInsets.symmetric(
+                              vertical: 15, horizontal: 20),
                           shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(10)),
                         ),
-                        child: Text(
+                        child: const Text(
                           'Créer mon compte',
-                          style: TextStyle(
-                              fontSize: screenWidth * 0.04,
-                              color: Colors.white),
+                          style: TextStyle(fontSize: 16, color: Colors.white),
                         ),
                       ),
+                      const SizedBox(height: 20),
                     ],
                   ),
                 ),
@@ -386,26 +437,18 @@ class _InscriptionPageState extends State<InscriptionPage> {
     );
   }
 
-// Méthode modifiée pour accepter le context et utiliser des tailles dynamiques
-  Widget _buildTextField(
-      BuildContext context, String label, TextEditingController controller,
+  Widget _buildTextField(String label, TextEditingController controller,
       {TextInputType keyboardType = TextInputType.text,
       bool obscureText = false}) {
-    final screenWidth = MediaQuery.of(context).size.width;
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Label avec taille dynamique
         Text(
           label,
-          style: TextStyle(
-              fontWeight: FontWeight.bold,
-              color: Color(0xFF4f0002),
-              fontSize: screenWidth * 0.04 // Taille dynamique
-              ),
+          style:
+              TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF4f0002)),
         ),
-        SizedBox(height: screenWidth * 0.02),
+        const SizedBox(height: 8),
         TextField(
           controller: controller,
           obscureText: obscureText,
@@ -414,8 +457,8 @@ class _InscriptionPageState extends State<InscriptionPage> {
             filled: true,
             fillColor: const Color(0xFFF5CAC3).withOpacity(0.75),
             hintText: 'Entrez votre $label',
-            contentPadding: EdgeInsets.symmetric(
-                vertical: screenWidth * 0.04, horizontal: screenWidth * 0.03),
+            contentPadding:
+                const EdgeInsets.symmetric(vertical: 15, horizontal: 10),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
               borderSide: const BorderSide(color: Color(0xFFb80d57)),

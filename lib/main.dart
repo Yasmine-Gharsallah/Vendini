@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:vendini/pages/connexion.dart';
 import 'package:vendini/pages/paiement.dart';
 import 'firebase_options.dart'; // Assurez-vous que ce fichier est généré et à jour
 
@@ -39,7 +40,7 @@ class MyApp extends StatelessWidget {
             const AddProductPage(), // Route pour ajouter un produit
         '/history': (context) =>
             const HistoryPage(), // Route pour la page historique
-        '/cart': (context) =>  PanierPage(),
+        '/cart': (context) => PanierPage(),
         '/infoProduit': (context) => const Infprod(),
         '/welcome': (context) => const WelcomeScreen(),
         '/three': (context) => const ThreePage(),
@@ -47,14 +48,13 @@ class MyApp extends StatelessWidget {
         '/five': (context) => const FivePage(),
         '/six': (context) => const SixPage(),
         '/payement': (context) => const Paiement(),
+        '/login': (context) => LoginPage(),
       },
       theme: ThemeData(
         primaryColor: const Color(0xFFE6B8AF),
         hintColor: const Color(0xFFA34961),
         fontFamily: 'Roboto',
-        textTheme: const TextTheme(
-        
-        ),
+        textTheme: const TextTheme(),
         buttonTheme: ButtonThemeData(
           buttonColor: const Color(0xFFA34961),
           textTheme: ButtonTextTheme.primary,

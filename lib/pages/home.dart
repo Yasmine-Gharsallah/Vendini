@@ -12,7 +12,8 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance; // Firestore instance
+  final FirebaseFirestore _firestore =
+      FirebaseFirestore.instance; // Firestore instance
   String? _userName;
   String? _userProfileImage;
   bool isLoading = true;
@@ -57,15 +58,14 @@ class _HomePageState extends State<HomePage> {
     User? user = _auth.currentUser;
     if (user != null) {
       try {
-        DocumentSnapshot userDoc = await _firestore
-            .collection('users')
-            .doc(user.uid)
-            .get();
+        DocumentSnapshot userDoc =
+            await _firestore.collection('users').doc(user.uid).get();
 
         if (userDoc.exists) {
           setState(() {
             _userName = userDoc['nom'] + userDoc['prenom'] ?? 'User';
-            _userProfileImage = userDoc['profileImage'] ?? 'assets/images/default_profile.png';
+            _userProfileImage =
+                userDoc['profileImage'] ?? 'assets/images/default_profile.png';
             isLoading = false;
           });
         }
@@ -86,8 +86,7 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-
-    if(isLoading) {
+    if (isLoading) {
       return Scaffold(
         body: Center(
           child: CircularProgressIndicator(),
@@ -99,39 +98,104 @@ class _HomePageState extends State<HomePage> {
       drawer: _buildDrawer(),
       appBar: AppBar(
         backgroundColor: const Color(0xFFFCDFDB),
+        automaticallyImplyLeading:
+            false, // Empêcher l'espacement automatique du menu
+        leading: Builder(
+          builder: (context) => IconButton(
+            icon: const Icon(Icons.menu, color: Colors.white),
+            onPressed: () {
+              Scaffold.of(context).openDrawer();
+            },
+          ),
+        ),
         title: Row(
           children: [
+            // Image de profil avec taille dynamique réduite
             CircleAvatar(
-              radius: 20,
-              backgroundImage: _userProfileImage != null ?
-                  NetworkImage(_userProfileImage!) : AssetImage("assets/profile.png"),
+              radius: MediaQuery.of(context).size.width *
+                  0.07, // 6% de la largeur de l'écran
+              backgroundImage: _userProfileImage != null
+                  ? NetworkImage(_userProfileImage!)
+                  : AssetImage("assets/profile.png"),
             ),
-            SizedBox(width: 10),
-            Text(
-              _userName ?? "",
-              style: TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
+            SizedBox(
+                width: MediaQuery.of(context).size.width *
+                    0.01), // Espacement entre image et texte
+            // Texte du nom d'utilisateur
+            Expanded(
+              child: Text(
+                _userName ?? "",
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: MediaQuery.of(context).size.width *
+                      0.035, // Taille dynamique réduite
+                  overflow: TextOverflow
+                      .ellipsis, // Pour éviter que le texte dépasse l'espace
+                ),
               ),
+            ),
+            // Icône favoris alignée à droite avec un espacement réduit
+            IconButton(
+              icon: const Icon(Icons.favorite, color: Colors.white),
+              onPressed: () {
+                print('Favoris');
+              },
+            ),
+            // Icône panier alignée à droite
+            IconButton(
+              icon: const Icon(Icons.shopping_cart, color: Colors.white),
+              onPressed: () {
+                Navigator.pushNamed(context, '/cart');
+              },
             ),
           ],
         ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.favorite, color: Colors.white),
-            onPressed: () {
-              print('Favoris');
-            },
-          ),
-          IconButton(
-            icon: const Icon(Icons.shopping_cart, color: Colors.white),
-            onPressed: () {
-              Navigator.pushNamed(
-                  context, '/cart'); // Navigation vers la page du panier
-            },
-          ),
-        ],
       ),
+
+      // return Scaffold(
+      //   drawer: _buildDrawer(),
+      //   appBar: AppBar(
+      //     backgroundColor: const Color(0xFFFCDFDB),
+      //     title: Row(
+      //       children: [
+      //         CircleAvatar(
+      //           radius: MediaQuery.of(context).size.width *
+      //               0.08, // 8% de la largeur de l'écran
+      //           backgroundImage: _userProfileImage != null
+      //               ? NetworkImage(_userProfileImage!)
+      //               : AssetImage("assets/profile.png"),
+      //         ),
+      //         SizedBox(
+      //             width: MediaQuery.of(context).size.width *
+      //                 0.03), // Espacement dynamique
+      //         Text(
+      //           _userName ?? "",
+      //           style: TextStyle(
+      //             color: Colors.white,
+      //             fontWeight: FontWeight.bold,
+      //             fontSize: MediaQuery.of(context).size.width *
+      //                 0.04, // Taille dynamique
+      //           ),
+      //         ),
+      //       ],
+      //     ),
+      //     actions: [
+      //       IconButton(
+      //         icon: const Icon(Icons.favorite, color: Colors.white),
+      //         onPressed: () {
+      //           print('Favoris');
+      //         },
+      //       ),
+      //       IconButton(
+      //         icon: const Icon(Icons.shopping_cart, color: Colors.white),
+      //         onPressed: () {
+      //           Navigator.pushNamed(context, '/cart');
+      //         },
+      //       ),
+      //     ],
+      //   ),
+
       body: Container(
         decoration: const BoxDecoration(
           image: DecorationImage(
@@ -141,19 +205,22 @@ class _HomePageState extends State<HomePage> {
         ),
         child: Column(
           children: [
-            const Padding(
-              padding: EdgeInsets.all(16.0),
+            Padding(
+              padding: EdgeInsets.all(MediaQuery.of(context).size.width *
+                  0.04), // Padding dynamique
               child: Text(
                 'Découvrez nos offres !',
                 style: TextStyle(
-                  fontSize: 24,
+                  fontSize: MediaQuery.of(context).size.width *
+                      0.06, // Taille dynamique
                   fontWeight: FontWeight.bold,
-                  color: Color(0xFFB50D56),
+                  color: const Color(0xFFB50D56),
                 ),
               ),
             ),
             SizedBox(
-              height: 120,
+              height: MediaQuery.of(context).size.height *
+                  0.2, // 20% de la hauteur de l'écran
               child: SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
                 child: Row(
@@ -171,7 +238,9 @@ class _HomePageState extends State<HomePage> {
             ),
             const SizedBox(height: 16.0),
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              padding: EdgeInsets.symmetric(
+                  horizontal: MediaQuery.of(context).size.width *
+                      0.04), // Padding dynamique
               child: TextField(
                 controller: _searchController,
                 decoration: InputDecoration(
@@ -193,14 +262,20 @@ class _HomePageState extends State<HomePage> {
                     filter: ImageFilter.blur(sigmaX: 10.0, sigmaY: 10.0),
                     child: Container(
                       color: Colors.white.withOpacity(0.5),
-                      padding: const EdgeInsets.all(16.0),
+                      padding: EdgeInsets.all(
+                          MediaQuery.of(context).size.width *
+                              0.04), // Padding dynamique
                       child: GridView.builder(
                         itemCount: _filteredProducts.length,
-                        gridDelegate:
-                            const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 2,
-                          crossAxisSpacing: 10.0,
-                          mainAxisSpacing: 10.0,
+                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: MediaQuery.of(context).size.width >
+                                  600
+                              ? 3
+                              : 2, // 2 colonnes pour les petits écrans, 3 pour les plus grands
+                          crossAxisSpacing: MediaQuery.of(context).size.width *
+                              0.04, // Espacement dynamique
+                          mainAxisSpacing: MediaQuery.of(context).size.height *
+                              0.02, // Espacement dynamique
                         ),
                         itemBuilder: (context, index) {
                           final product = _filteredProducts[index];
@@ -302,7 +377,7 @@ class _HomePageState extends State<HomePage> {
           IconButton(
             icon: const Icon(Icons.settings, color: Colors.white),
             onPressed: () {
-              print('Paramètres');
+              _showSettingsMenu();
             },
           ),
           IconButton(
@@ -316,12 +391,69 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  void _showSettingsMenu() async {
+    try {
+      // Show a confirmation dialog before logging out
+      bool? confirmLogout = await showDialog<bool>(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text('Déconnexion'),
+            content: Text('Êtes-vous sûr de vouloir vous déconnecter ?'),
+            actions: <Widget>[
+              TextButton(
+                child: Text('Annuler'),
+                onPressed: () => Navigator.of(context).pop(false),
+              ),
+              TextButton(
+                child: Text('Déconnexion'),
+                onPressed: () => Navigator.of(context).pop(true),
+              ),
+            ],
+          );
+        },
+      );
+
+      // Only proceed with logout if confirmed
+      if (confirmLogout == true) {
+        // Show loading indicator
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (BuildContext context) {
+            return Center(
+              child: CircularProgressIndicator(),
+            );
+          },
+        );
+
+        // Perform logout
+        await FirebaseAuth.instance.signOut();
+
+        // Dismiss loading indicator and navigate to login
+        Navigator.of(context)
+            .pushNamedAndRemoveUntil('/login', (Route<dynamic> route) => false);
+      }
+    } catch (e) {
+      // Handle potential logout errors
+      Navigator.of(context).pop(); // Dismiss loading indicator if it's showing
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Erreur de déconnexion: ${e.toString()}'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
   Widget _buildProductCard(String productName, String price, String imagePath,
       {bool showDiscount = false,
       bool hideDetails = false,
       bool showCartIcon = false}) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 10.0),
+      padding: EdgeInsets.symmetric(
+          horizontal:
+              MediaQuery.of(context).size.width * 0.04), // Padding dynamique
       child: Card(
         elevation: 5,
         shape: RoundedRectangleBorder(
@@ -333,8 +465,10 @@ class _HomePageState extends State<HomePage> {
               borderRadius: BorderRadius.circular(10),
               child: Image.asset(
                 imagePath,
-                width: 165,
-                height: 135,
+                width: MediaQuery.of(context).size.width *
+                    0.4, // 40% de la largeur de l'écran
+                height: MediaQuery.of(context).size.height *
+                    0.2, // 20% de la hauteur de l'écran
                 fit: BoxFit.cover,
               ),
             ),
