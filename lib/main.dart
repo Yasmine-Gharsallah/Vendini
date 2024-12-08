@@ -63,6 +63,17 @@ class MyApp extends StatelessWidget {
           textTheme: ButtonTextTheme.primary,
         ),
       ),
+
+
+
+      initialRoute: '/',
+      routes: {
+        '/': (context) => const HomePage(),
+        '/cart': (context) => PanierPage(userId: ModalRoute.of(context)!.settings.arguments as String),
+      },
+
+
+      
     );
   }
 }
