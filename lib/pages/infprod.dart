@@ -75,7 +75,7 @@ class Infprod extends StatelessWidget {
                                       const SizedBox(width: 8),
                                       Column(
                                         crossAxisAlignment:
-                                            CrossAxisAlignment.start,
+                                        CrossAxisAlignment.start,
                                         children: [
                                           const Text(
                                             'Nour Vendini',
@@ -142,10 +142,10 @@ class Infprod extends StatelessWidget {
                           SizedBox(height: 10),
                           Text(
                             'Catégorie: vêtements\n'
-                            'Taille: S\n'
-                            'Couleur: beige\n'
-                            'Etat: en bon état\n'
-                            'Marque: (sans marque)',
+                                'Taille: S\n'
+                                'Couleur: beige\n'
+                                'Etat: en bon état\n'
+                                'Marque: (sans marque)',
                             style: TextStyle(
                               fontFamily: 'Frank Ruhl Libre',
                               fontSize: 14,

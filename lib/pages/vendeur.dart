@@ -20,7 +20,7 @@ class ProductPage extends StatelessWidget {
     return Scaffold(
       body: Stack(
         children: [
-          // Image de fond
+          // Background image
           Container(
             decoration: const BoxDecoration(
               image: DecorationImage(
@@ -29,17 +29,17 @@ class ProductPage extends StatelessWidget {
               ),
             ),
           ),
-          // Contenu principal
-          Column(
+          // Main content
+          ListView( // Use ListView for scrolling
+            padding: const EdgeInsets.symmetric(vertical: 10),
             children: [
-              // Barre supérieure avec informations utilisateur centrées
+              // Top bar with centered user information
               SafeArea(
                 child: Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                  padding: const EdgeInsets.symmetric(horizontal: 10),
                   child: Column(
                     children: [
-                      // Bouton retour
+                      // Back button
                       Align(
                         alignment: Alignment.topLeft,
                         child: IconButton(
@@ -50,19 +50,17 @@ class ProductPage extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 10),
-                      // Informations utilisateur centrées
+                      // Centered user information
                       Column(
                         children: [
                           const CircleAvatar(
-                            backgroundImage:
-                                AssetImage('assets/images/girl.png'),
+                            backgroundImage: AssetImage('assets/images/girl.png'),
                             radius: 25,
                           ),
                           const SizedBox(height: 10),
                           const Text(
                             "Nour Vendini",
-                            style: TextStyle(
-                                fontSize: 18, fontWeight: FontWeight.bold),
+                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                           ),
                           const SizedBox(height: 5),
                           Row(
@@ -82,113 +80,99 @@ class ProductPage extends StatelessWidget {
                 ),
               ),
               const Divider(),
-              // Contenu défilable
-              Expanded(
-                child: SingleChildScrollView(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+              // Title "En Promotion"
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 20),
+                child: Text(
+                  "En Promotion",
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.pink,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 10),
+              // Products section
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 10),
+                child: Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.85),
+                    borderRadius: BorderRadius.circular(25),
+                  ),
+                  child: GridView.count(
+                    crossAxisCount: 2,
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    crossAxisSpacing: 10,
+                    mainAxisSpacing: 10,
+                    childAspectRatio: 0.75,
                     children: [
-                      // Titre "En Promotion"
-                      const Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 20),
-                        child: Text(
-                          "En Promotion",
-                          style: TextStyle(
-                            fontSize: 22,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.pink,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 10),
-                      // Section des produits
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 10),
-                        child: Container(
-                          padding: const EdgeInsets.all(10),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.85),
-                            borderRadius: BorderRadius.circular(25),
-                          ),
-                          child: GridView.count(
-                            crossAxisCount: 2,
-                            shrinkWrap: true,
-                            physics: const NeverScrollableScrollPhysics(),
-                            crossAxisSpacing: 10,
-                            mainAxisSpacing: 10,
-                            childAspectRatio: 0.75,
-                            children: [
-                              _buildProductCard(
-                                  "Pyjama", "30 TND", 'assets/images/4.png'),
-                              _buildProductCard(
-                                  "Pyjama", "50 TND", 'assets/images/8.png'),
-                              _buildProductCard("Robe chemise", "95 TND",
-                                  'assets/images/9.png'),
-                              _buildProductCard("Pyjama bébé", "25 TND",
-                                  'assets/images/10.png'),
-                            ],
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 25),
-                      const Center(
-                        child: Text(
-                          "Code Promo: NSupCom",
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Color.fromARGB(255, 227, 144, 103),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-                      // Section des produits vendus
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 10),
-                        child: Container(
-                          padding: const EdgeInsets.all(10),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.85),
-                            borderRadius: BorderRadius.circular(25),
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              _buildSoldProductCard('assets/images/11.png'),
-                              _buildSoldProductCard('assets/images/12.png'),
-                              _buildSoldProductCard('assets/images/13.png'),
-                            ],
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-                      const Center(
-                        child: Column(
-                          children: [
-                            Text(
-                              "Contact: ",
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.black,
-                              ),
-                            ),
-                            SizedBox(height: 5),
-                            Text(
-                              "+216 52 237 915",
-                              style: TextStyle(
-                                fontSize: 16,
-                                color: Colors.grey,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 10),
+                      _buildProductCard("Pyjama", "30 TND", 'assets/images/4.png'),
+                      _buildProductCard("Pyjama", "50 TND", 'assets/images/8.png'),
+                      _buildProductCard("Robe chemise", "95 TND", 'assets/images/9.png'),
+                      _buildProductCard("Pyjama bébé", "25 TND", 'assets/images/10.png'),
                     ],
                   ),
                 ),
               ),
+              const SizedBox(height: 25),
+              const Center(
+                child: Text(
+                  "Code Promo: NSupCom",
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Color.fromARGB(255, 227, 144, 103),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+              // Sold products section
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 10),
+                child: Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.85),
+                    borderRadius: BorderRadius.circular(25),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      _buildSoldProductCard('assets/images/11.png'),
+                      _buildSoldProductCard('assets/images/12.png'),
+                      _buildSoldProductCard('assets/images/13.png'),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+              const Center(
+                child: Column(
+                  children: [
+                    Text(
+                      "Contact: ",
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black,
+                      ),
+                    ),
+                    SizedBox(height: 5),
+                    Text(
+                      "+216 52 237 915",
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: Colors.grey,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 10),
             ],
           ),
         ],
@@ -231,14 +215,12 @@ class ProductPage extends StatelessWidget {
               children: [
                 Text(
                   name,
-                  style: const TextStyle(
-                      fontSize: 16, fontWeight: FontWeight.bold),
+                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 5),
                 Text(
                   price,
-                  style: const TextStyle(
-                      fontSize: 14, color: Color.fromARGB(255, 113, 13, 41)),
+                  style: const TextStyle(fontSize: 14, color: Color.fromARGB(255, 113, 13, 41)),
                 ),
               ],
             ),
@@ -263,7 +245,7 @@ class ProductPage extends StatelessWidget {
             ),
           ),
         ),
-        // Étiquette "Vendu"
+        // "Sold" label
         Positioned(
           top: 10,
           child: Container(

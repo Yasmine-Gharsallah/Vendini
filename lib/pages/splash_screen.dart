@@ -26,6 +26,7 @@ class SplashScreen extends StatelessWidget {
                 Image.asset(
                   'assets/images/logoVendini.png', // Remplacez par votre logo
                   height: 350,
+                  width:300,
                 ),
                 const SizedBox(height: 20), // Espace entre le logo et le bouton
 
