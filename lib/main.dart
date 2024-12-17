@@ -15,6 +15,7 @@ import 'package:vendini/pages/panier.dart';
 import 'package:vendini/pages/post.dart'; // Exemple : ajouter un produit
 import 'package:vendini/pages/history.dart'; // Décommentez si cette page est implémentée
 import 'package:vendini/pages/infprod.dart'; // Décommentez si cette page est implémentée
+import 'package:vendini/pages/profil.dart'; // Import ProfilePage
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -37,6 +38,7 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       home: const SplashScreen(), // Page d'accueil initiale
       routes: {
+        '/favoris': (context) => FavorisPage(),
         '/vendeur': (context) => const Vendeur(),
         '/infoProd': (context) => Infprod(),
         '/addProduct': (context) => const AddProductPage(), // Route pour ajouter un produit
@@ -51,6 +53,7 @@ class MyApp extends StatelessWidget {
         '/payement': (context) => const Paiement(),
         '/login': (context) => LoginPage(),
         '/favoris': (context) => const FavorisPage(), // Add route for FavorisPage
+        '/profile': (context) => const ProfilPage(), // Add route for ProfilePage
       },
       theme: ThemeData(
         primaryColor: const Color(0xFFE6B8AF),

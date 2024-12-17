@@ -6,34 +6,16 @@ import 'package:firebase_auth/firebase_auth.dart';
 class FavorisPage extends StatelessWidget {
   const FavorisPage({super.key});
 
-  // Function to add a favorite item to Firestore
-  Future<void> addFavorite(String userId, Map<String, dynamic> favoriteItem) async {
-    try {
-      await FirebaseFirestore.instance.collection('favorites').doc(userId).set({
-        'favorites': FieldValue.arrayUnion([favoriteItem])
-      }, SetOptions(merge: true));
-    } catch (e) {
-      print('Error adding favorite: $e');
-    }
-  }
-
-  // Function to remove a favorite item from Firestore
-  Future<void> removeFavorite(String userId, Map<String, dynamic> favoriteItem) async {
-    try {
-      await FirebaseFirestore.instance.collection('favorites').doc(userId).update({
-        'favorites': FieldValue.arrayRemove([favoriteItem])
-      });
-    } catch (e) {
-      print('Error removing favorite: $e');
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     // Get the current user
     User? user = FirebaseAuth.instance.currentUser;
 
     return Scaffold(
+      appBar: AppBar(
+        title: const Text('Mes Favoris'),
+        backgroundColor: const Color(0xFFFCDFDB),
+      ),
       body: Stack(
         children: [
           // Background image
@@ -126,56 +108,31 @@ class FavorisPage extends StatelessWidget {
                                       return const Center(child: CircularProgressIndicator()); // Loading indicator
                                     }
                                     if (!snapshot.hasData || !snapshot.data!.exists) {
-                                      return const Center(child: Text('Aucun favori trouvé.'));
+                                      return const Center(child: Text('Aucun favori trouvé.')); // No favorites found
                                     }
 
                                     // Extract the favorites list from the document
                                     List<dynamic> favorites = snapshot.data!['favorites'] ?? [];
 
                                     if (favorites.isEmpty) {
-                                      return const Center(child: Text('Aucun favori trouvé.'));
+                                      return const Center(child: Text('Aucun favori trouvé.')); // No favorites found
                                     }
 
                                     return ListView.builder(
                                       itemCount: favorites.length,
                                       itemBuilder: (context, index) {
-                                        // Ensure that each favorite item is a map
-                                        final favori = favorites[index];
-                                        if (favori is Map<String, dynamic>) {
-                                          // Use null checks and default values
-                                          String itemName = favori['item'] ?? 'Nom inconnu'; // Default value if null
-                                          String itemImage = favori['image'] ?? 'default_image_url'; // Default image if null
-                                          String itemDate = favori['date'] ?? 'Date inconnue'; // Default date if null
-
-                                          return Card(
-                                            margin: const EdgeInsets.symmetric(vertical: 8),
-                                            child: ListTile(
-                                              leading: ClipRRect(
-                                                borderRadius: BorderRadius.circular(8),
-                                                child: Image.network(
-                                                  itemImage, // Use network image for dynamic loading
-                                                  width: 50,
-                                                  height: 50,
-                                                  fit: BoxFit.cover,
-                                                ),
-                                              ),
-                                              title: Text(itemName), // Use the safe item name
-                                              subtitle: Text(
-                                                'Date: $itemDate', // Use the safe date
-                                                style: const TextStyle(fontSize: 12),
-                                              ),
-                                              trailing: IconButton(
-                                                icon: const Icon(Icons.delete, color: Colors.red),
-                                                onPressed: () {
-                                                  // Remove the favorite item from Firestore
-                                                  removeFavorite(user!.uid, favori);
-                                                },
-                                              ),
-                                            ),
-                                          );
-                                        } else {
-                                          return const SizedBox.shrink(); // Handle unexpected data types
-                                        }
+                                        // Ensure that each favorite item is a string (product name)
+                                        String productName = favorites[index] ?? 'Nom inconnu'; // Default value if null
+                                        return Card(
+                                          margin: const EdgeInsets.symmetric(vertical: 8),
+                                          child: ListTile(
+                                            title: Text(productName), // Display the product name
+                                            onTap: () {
+                                              // Navigate to product details or another action if needed
+                                              Navigator.pushNamed(context, '/productDetail', arguments: productName);
+                                            },
+                                          ),
+                                        );
                                       },
                                     );
                                   },
