@@ -150,11 +150,17 @@ class _HomePageState extends State<HomePage> {
         title: Row(
           children: [
             // Profile image with dynamic reduced size
-            CircleAvatar(
-              radius: MediaQuery.of(context).size.width * 0.07, // 6% of screen width
-              backgroundImage: _userProfileImage != null
-                  ? NetworkImage(_userProfileImage!)
-                  : AssetImage("assets/profile.png"),
+            GestureDetector(
+              onTap: () {
+                // Navigate to the profile page when the profile image is tapped
+                Navigator.pushNamed(context, '/profile'); // Ensure '/profile' route is defined in your routes
+              },
+              child: CircleAvatar(
+                radius: MediaQuery.of(context).size.width * 0.07, // 6% of screen width
+                backgroundImage: _userProfileImage != null
+                    ? NetworkImage(_userProfileImage!)
+                    : AssetImage("assets/profile.png"),
+              ),
             ),
             SizedBox(width: MediaQuery.of(context).size.width * 0.01), // Spacing between image and text
             // Username text
