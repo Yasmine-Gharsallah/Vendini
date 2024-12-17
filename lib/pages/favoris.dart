@@ -123,7 +123,7 @@ class FavorisPage extends StatelessWidget {
                                       .snapshots(),
                                   builder: (context, snapshot) {
                                     if (snapshot.connectionState == ConnectionState.waiting) {
-                                      return const Center(child: CircularProgressIndicator());
+                                      return const Center(child: CircularProgressIndicator()); // Loading indicator
                                     }
                                     if (!snapshot.hasData || !snapshot.data!.exists) {
                                       return const Center(child: Text('Aucun favori trouvé.'));
@@ -142,21 +142,26 @@ class FavorisPage extends StatelessWidget {
                                         // Ensure that each favorite item is a map
                                         final favori = favorites[index];
                                         if (favori is Map<String, dynamic>) {
+                                          // Use null checks and default values
+                                          String itemName = favori['item'] ?? 'Nom inconnu'; // Default value if null
+                                          String itemImage = favori['image'] ?? 'default_image_url'; // Default image if null
+                                          String itemDate = favori['date'] ?? 'Date inconnue'; // Default date if null
+
                                           return Card(
                                             margin: const EdgeInsets.symmetric(vertical: 8),
                                             child: ListTile(
                                               leading: ClipRRect(
                                                 borderRadius: BorderRadius.circular(8),
-                                                child: Image.asset(
-                                                  favori['image'], // Ensure this field exists in your Firestore data
+                                                child: Image.network(
+                                                  itemImage, // Use network image for dynamic loading
                                                   width: 50,
                                                   height: 50,
                                                   fit: BoxFit.cover,
                                                 ),
                                               ),
-                                              title: Text(favori['item']), // Ensure this field exists in your Firestore data
+                                              title: Text(itemName), // Use the safe item name
                                               subtitle: Text(
-                                                'Date: ${favori['date']}', // Ensure this field exists in your Firestore data
+                                                'Date: $itemDate', // Use the safe date
                                                 style: const TextStyle(fontSize: 12),
                                               ),
                                               trailing: IconButton(

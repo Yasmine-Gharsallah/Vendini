@@ -4,7 +4,7 @@ import 'package:vendini/pages/connexion.dart';
 import 'package:vendini/pages/paiement.dart';
 import 'package:vendini/pages/vendeur.dart';
 import 'firebase_options.dart'; // Assurez-vous que ce fichier est généré et à jour
-
+import 'package:vendini/pages/favoris.dart'; // Import FavorisPage
 import 'package:vendini/pages/splash_screen.dart';
 import 'package:vendini/pages/welcome_screen.dart';
 import 'package:vendini/pages/threepage.dart';
@@ -39,10 +39,8 @@ class MyApp extends StatelessWidget {
       routes: {
         '/vendeur': (context) => const Vendeur(),
         '/infoProd': (context) => Infprod(),
-        '/addProduct': (context) =>
-            const AddProductPage(), // Route pour ajouter un produit
-        '/history': (context) =>
-            const HistoryPage(), // Route pour la page historique
+        '/addProduct': (context) => const AddProductPage(), // Route pour ajouter un produit
+        '/history': (context) => const HistoryPage(), // Route pour la page historique
         '/cart': (context) => PanierPage(),
         '/infoProduit': (context) => const Infprod(),
         '/welcome': (context) => const WelcomeScreen(),
@@ -52,6 +50,7 @@ class MyApp extends StatelessWidget {
         '/six': (context) => const SixPage(),
         '/payement': (context) => const Paiement(),
         '/login': (context) => LoginPage(),
+        '/favoris': (context) => const FavorisPage(), // Add route for FavorisPage
       },
       theme: ThemeData(
         primaryColor: const Color(0xFFE6B8AF),
