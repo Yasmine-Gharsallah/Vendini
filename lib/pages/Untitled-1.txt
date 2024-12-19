@@ -1,0 +1,299 @@
+import 'package:flutter/material.dart';
+
+void main() => runApp(const MyApp());
+
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      home: ProductPage(),
+    );
+  }
+}
+
+class ProductPage extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Stack(
+        children: [
+          // Background image
+          Container(
+            decoration: const BoxDecoration(
+              image: DecorationImage(
+                image: AssetImage('assets/images/background.png'),
+                fit: BoxFit.cover,
+              ),
+            ),
+          ),
+          // Foreground content
+          Column(
+            children: [
+              // Top bar with back button, user info, and icons
+              SafeArea(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.arrow_back),
+                        onPressed: () {
+                          // Handle back navigation
+                        },
+                      ),
+                      Row(
+                        children: [
+                          CircleAvatar(
+                            backgroundImage: AssetImage('assets/images/user.png'),
+                            radius: 20,
+                          ),
+                          const SizedBox(width: 10),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                "Nour Ghamgui",
+                                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                              ),
+                              Row(
+                                children: List.generate(5, (index) {
+                                  return const Icon(Icons.star, color: Colors.yellow, size: 14);
+                                }),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                      Row(
+                        children: [
+                          IconButton(
+                            icon: const Icon(Icons.favorite, color: Colors.pink),
+                            onPressed: () {
+                              // Handle favorites
+                            },
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.shopping_cart),
+                            onPressed: () {
+                              // Handle cart
+                            },
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const Divider(),
+              // Scrollable content
+              Expanded(
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 20),
+                        child: Text(
+                          "En Promotion",
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.pink,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      // Rest of the original content remains the same
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 10),
+                        child: Container(
+                          padding: const EdgeInsets.all(15),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.7),
+                            borderRadius: BorderRadius.circular(25),
+                          ),
+                          child: GridView.count(
+                            crossAxisCount: 2,
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            crossAxisSpacing: 10,
+                            mainAxisSpacing: 10,
+                            childAspectRatio: 0.8,
+                            children: [
+                              _buildProductCard("Pyjama", "30 TND", 'assets/images/pyjama.png'),
+                              _buildProductCard("Pyjama", "50 TND", 'assets/images/pyjama2.png'),
+                              _buildProductCard("Robe chemise", "95 TND", 'assets/images/robe_chemise.png'),
+                              _buildProductCard("Pyjama bébé", "25 TND", 'assets/images/pyjama_bebe.png'),
+                            ],
+                          ),
+                        ),
+                      ),
+
+                      const SizedBox(height: 20),
+                      const Center(
+                        child: Text(
+                          "Code Promo: NSupCom",
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.pink,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 10),
+                        child: Container(
+                          padding: const EdgeInsets.all(15),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.7),
+                            borderRadius: BorderRadius.circular(25),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              _buildSoldProductCard('assets/images/sold1.png'),
+                              _buildSoldProductCard('assets/images/sold2.png'),
+                              _buildSoldProductCard('assets/images/sold3.png'),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      Center(
+                        child: Column(
+                          children: [
+                            const Text(
+                              "Contact:",
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black,
+                              ),
+                            ),
+                            const SizedBox(height: 5),
+                            const Text(
+                              "+216 52 237 915",
+                              style: TextStyle(fontSize: 16, color: Colors.grey),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildProductCard(String name, String price, String imagePath) {
+  return Container(
+    height: 400, // Fixed height for the card
+    decoration: BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(10),
+      boxShadow: [
+        BoxShadow(
+          color: Colors.black26,
+          blurRadius: 5,
+          offset: const Offset(0, 4),
+        ),
+      ],
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Image section with fixed height
+        ClipRRect(
+          borderRadius: const BorderRadius.only(
+            topLeft: Radius.circular(10),
+            topRight: Radius.circular(10),
+          ),
+          child: Image.asset(
+            imagePath,
+            height: 72, // Adjust image height as needed
+            width: double.infinity,
+            fit: BoxFit.cover,
+          ),
+        ),
+        // Text and price section
+        Expanded( // This ensures the text and button fit dynamically
+          child: Padding(
+            padding: const EdgeInsets.all(10),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  name,
+                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 1, // Prevents text overflow
+                ),
+                const SizedBox(height: 0),
+                Text(
+                  price,
+                  style: const TextStyle(fontSize: 14, color: Colors.grey),
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 1,
+                ),
+                //const Spacer(), // Pushes the button to the bottom
+                ElevatedButton.icon(
+                  onPressed: () {
+                    // Add to cart
+                  },
+                  icon: const Icon(Icons.shopping_cart, size: 16),
+                  label: const Text(
+                    "Ajouter",
+                    style: TextStyle(fontSize: 14),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.pink,
+                    minimumSize: const Size(double.infinity, 30),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
+
+
+
+  Widget _buildSoldProductCard(String imagePath) {
+    return Stack(
+      alignment: Alignment.center,
+      children: [
+        Container(
+          height: 100,
+          width: 80,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(10),
+            image: DecorationImage(
+              image: AssetImage(imagePath),
+              fit: BoxFit.cover,
+            ),
+          ),
+        ),
+        // VENDU Overlay
+                  Image.asset(
+                    'assets/images/vendu.png',
+                    width: 100,
+                    height: 50,
+                  ),
+      ],
+    );
+  }
+}

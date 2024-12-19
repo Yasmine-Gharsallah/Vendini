@@ -14,6 +14,7 @@ class _HomePageState extends State<HomePage> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance; // Firestore instance
   String? _userName;
+  String? _userID;
   String? _userProfileImage;
   bool isLoading = true;
   Set<String> _favoriteProducts = {}; // Track favorite products
@@ -59,6 +60,7 @@ class _HomePageState extends State<HomePage> {
         if (userDoc.exists) {
           setState(() {
             _userName = userDoc['nom'] + ' ' + userDoc['prenom'] ?? 'User';
+            _userID = user.uid;
             _userProfileImage = userDoc['profileImage'] ?? 'assets/images/default_profile.png';
             isLoading = false;
           });
@@ -219,11 +221,13 @@ class _HomePageState extends State<HomePage> {
                 child: Row(
                   children: _scrollProducts
                       .map((product) => _buildStaticProductCard(
-                    product['name']!,
-                    product['price']!,
-                    product['image']!,
-                    hideDetails: true,
-                    showDiscount: true,
+                      product['name']!,
+                      product['price']!,
+                      product['image']!,
+                      hideDetails: true,
+                      showDiscount: true,
+                      userID: _userID.toString(),
+                      productID: "2ToAcYrdHyxqUrpzyhwH"
                   ))
                       .toList(),
                 ),
@@ -269,6 +273,8 @@ class _HomePageState extends State<HomePage> {
 
                           // Map the fetched documents to a list of products
                           final products = snapshot.data!.docs;
+                          final productUIDs = snapshot.data!.docs.map((doc) => doc.id).toList();
+
 
                           return GridView.builder(
                             itemCount: products.length,
@@ -280,12 +286,14 @@ class _HomePageState extends State<HomePage> {
                             itemBuilder: (context, index) {
                               final product = products[index].data() as Map<String, dynamic>;
                               return _buildProductCard(
-                                product['label'] ?? 'Unknown', // Use brand as product name
-                                product['price']?.toString() ?? '0', // Use price
-                                product['imageUrl'] != null && product['imageUrl'].isNotEmpty
-                                    ? product['imageUrl'] // Use imageUrl if valid
-                                    : 'assets/images/armoire.png', // Default image if not valid
-                                showCartIcon: true,
+                                  product['label'] ?? 'Unknown', // Use brand as product name
+                                  product['price']?.toString() ?? '0', // Use price
+                                  product['imageUrl'] != null && product['imageUrl'].isNotEmpty
+                                      ? product['imageUrl'] // Use imageUrl if valid
+                                      : 'assets/images/armoire.png', // Default image if not valid
+                                  showCartIcon: true,
+                                  userID: _userID.toString(),
+                                  productID: productUIDs[index]
                               );
                             },
                           );
@@ -458,7 +466,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildProductCard(String productName, String price, String imagePath,
-      {bool showDiscount = false, bool hideDetails = false, bool showCartIcon = false}) {
+      {bool showDiscount = false, bool hideDetails = false, bool showCartIcon = false,String? userID, String? productID}) {
     bool isFavorite = _favoriteProducts.contains(productName); // Check if the product is favorited
 
     return GestureDetector(
@@ -530,7 +538,8 @@ class _HomePageState extends State<HomePage> {
                   right: 5,
                   child: GestureDetector(
                     onTap: () {
-                      print('Produit ajouté au panier : $productName');
+                      addItemToUser(userID, productID);
+                      //print('Produit ajouté au panier : $productName');
                     },
                     child: const CircleAvatar(
                       backgroundColor: Colors.white,
@@ -574,7 +583,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildStaticProductCard(String productName, String price, String imagePath,
-      {bool showDiscount = false, bool hideDetails = false, bool showCartIcon = false}) {
+      {bool showDiscount = false, bool hideDetails = false, bool showCartIcon = false,String? userID, String? productID}) {
     return GestureDetector(
       onTap: () {
         // Navigate to product details or another action if needed
@@ -642,6 +651,7 @@ class _HomePageState extends State<HomePage> {
                   right: 5,
                   child: GestureDetector(
                     onTap: () {
+                      addItemToUser(userID, productID);
                       print('Produit ajouté au panier : $productName');
                     },
                     child: const CircleAvatar(
@@ -656,5 +666,19 @@ class _HomePageState extends State<HomePage> {
         ),
       ),
     );
+  }
+}
+
+
+Future<void> addItemToUser(String? userId, String? productId) async {
+  try {
+    // Reference to the user's cart collection
+    CollectionReference userCollection = FirebaseFirestore.instance.collection('users').doc(userId).collection('cart');
+
+    // Add the item by saving the product ID
+    await userCollection.add({"id": productId});
+    print('Item added successfully for user: $userId');
+  } catch (e) {
+    print('Error adding item: $e');
   }
 }
