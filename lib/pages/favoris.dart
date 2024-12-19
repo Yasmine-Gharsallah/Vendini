@@ -12,7 +12,6 @@ class FavorisPage extends StatelessWidget {
     User? user = FirebaseAuth.instance.currentUser;
 
     return Scaffold(
-    
       body: Stack(
         children: [
           // Background image
@@ -47,7 +46,7 @@ class FavorisPage extends StatelessWidget {
                       ),
                     ],
                   ),
-                  const SizedBox(height:5),
+                  const SizedBox(height: 5),
                   // Centered title
                   const Padding(
                     padding: EdgeInsets.all(8.0),
@@ -61,15 +60,15 @@ class FavorisPage extends StatelessWidget {
                       ),
                     ),
                   ),
-                  const SizedBox(height:5), // Space between title and image
+                  const SizedBox(height: 5), // Space between title and image
                   // Centered image
                   Container(
-                    width: 250, 
+                    width: 250,
                     height: 200,
                     decoration: const BoxDecoration(
                       image: DecorationImage(
                         image: AssetImage(
-                            'assets/images/favoris.png'), // Added image
+                            'assets/images/favoris.png.png'), // Added image
                         fit: BoxFit.cover,
                       ),
                     ),
@@ -228,7 +227,6 @@ class FavorisPage extends StatelessWidget {
                                   },
                                 ),
                               ),
-
                             ],
                           ),
                         ),
