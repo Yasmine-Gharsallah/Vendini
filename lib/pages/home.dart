@@ -17,6 +17,9 @@ class _HomePageState extends State<HomePage> {
   String? _userName;
   String? _userProfileImage;
   bool isLoading = true;
+  final Set<String> _favoriteProducts = {}; // Track favorite products
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
 
   final List<Map<String, String>> _scrollProducts = [
     {'name': 'Produit 1', 'price': '20 TND', 'image': 'assets/images/1.png'},
@@ -25,31 +28,23 @@ class _HomePageState extends State<HomePage> {
     {'name': 'Produit 5', 'price': '100 TND', 'image': 'assets/images/5.png'},
   ];
 
-  final List<Map<String, String>> _blurProducts = [
-    {'name': 'Pyjama', 'price': '30 TND', 'image': 'assets/images/4.png'},
-    {'name': 'Manteau', 'price': '50 TND', 'image': 'assets/images/5.png'},
-    {
-      'name': 'Les misérables',
-      'price': '80 TND',
-      'image': 'assets/images/6.png'
-    },
-    {'name': 'Armoire', 'price': '200 TND', 'image': 'assets/images/7.png'},
-  ];
-
-  final TextEditingController _searchController = TextEditingController();
-  List<Map<String, String>> _filteredProducts = [];
+  final List<Map<String, String>> _filteredProducts = [];
 
   @override
   void initState() {
     super.initState();
-    _filteredProducts = List.from(_blurProducts);
-    _searchController.addListener(_filterProducts);
+
     _initUser();
+    _loadFavorites();
+    _searchController.addListener(() {
+      setState(() {
+        _searchQuery = _searchController.text.toLowerCase();
+      });
+    });
   }
 
   @override
   void dispose() {
-    _searchController.removeListener(_filterProducts);
     _searchController.dispose();
     super.dispose();
   }
@@ -59,11 +54,11 @@ class _HomePageState extends State<HomePage> {
     if (user != null) {
       try {
         DocumentSnapshot userDoc =
-        await _firestore.collection('users').doc(user.uid).get();
+            await _firestore.collection('users').doc(user.uid).get();
 
         if (userDoc.exists) {
           setState(() {
-            _userName = userDoc['nom'] + userDoc['prenom'] ?? 'User';
+            _userName = userDoc['nom'] + ' ' + userDoc['prenom'] ?? 'User';
             _userProfileImage =
                 userDoc['profileImage'] ?? 'assets/images/default_profile.png';
             isLoading = false;
@@ -74,37 +69,69 @@ class _HomePageState extends State<HomePage> {
       }
     }
   }
-  void _filterByCategory(String category) {
-    setState(() {
-      if (category == 'Vêtement') {
-        _filteredProducts = _blurProducts
-            .where((product) =>
-        product['image'] == 'assets/images/4.png' ||
-            product['image'] == 'assets/images/5.png')
-            .toList();
-      } else if (category == 'Meuble') {
-        _filteredProducts = _blurProducts
-            .where((product) => product['image'] == 'assets/images/7.png')
-            .toList();
-      } else if (category == 'Livres') {
-        _filteredProducts = _blurProducts
-            .where((product) => product['image'] == 'assets/images/6.png')
-            .toList();
-      } else if (category == 'Vaisselle' || category == 'Électroménager') {
-        _filteredProducts = [];
+
+  Future<void> _loadFavorites() async {
+    User? user = _auth.currentUser;
+    if (user != null) {
+      try {
+        DocumentSnapshot userFavorites = await FirebaseFirestore.instance
+            .collection('favorites')
+            .doc(user.uid)
+            .get();
+
+        if (userFavorites.exists) {
+          List<dynamic> favorites = userFavorites['favorites'] ?? [];
+          setState(() {
+            _favoriteProducts.addAll(
+              favorites.map((item) => item['id'].toString()).toSet(),
+            );
+          });
+        }
+      } catch (e) {
+        print('Error loading favorites: $e');
       }
-    });
+    }
   }
 
-  void _filterProducts() {
-    final query = _searchController.text.toLowerCase();
-    setState(() {
-      _filteredProducts = _blurProducts
-          .where((product) =>
-      product['name']!.toLowerCase().contains(query) ||
-          product['price']!.contains(query)) // Ajout pour permettre de filtrer aussi par prix
-          .toList();
-    });
+  Future<void> _addFavoriteToFirestore(
+      String productId, String productName) async {
+    User? user =
+        _auth.currentUser; // Assurez-vous que l'utilisateur est connecté
+    if (user != null) {
+      try {
+        await FirebaseFirestore.instance.collection('favorites').doc(user.uid).set(
+            {
+              'favorites': FieldValue.arrayUnion([
+                {'id': productId, 'name': productName}
+              ])
+            },
+            SetOptions(
+                merge:
+                    true)); // Utilisez merge pour ne pas écraser les données existantes
+      } catch (e) {
+        print('Error adding favorite: $e');
+      }
+    }
+  }
+
+  Future<void> _removeFavoriteFromFirestore(
+      String productId, String productName) async {
+    User? user =
+        _auth.currentUser; // Assurez-vous que l'utilisateur est connecté
+    if (user != null) {
+      try {
+        await FirebaseFirestore.instance
+            .collection('favorites')
+            .doc(user.uid)
+            .update({
+          'favorites': FieldValue.arrayRemove([
+            {'id': productId, 'name': productName}
+          ])
+        });
+      } catch (e) {
+        print('Error removing favorite: $e');
+      }
+    }
   }
 
   @override
@@ -122,7 +149,7 @@ class _HomePageState extends State<HomePage> {
       appBar: AppBar(
         backgroundColor: const Color(0xFFFCDFDB),
         automaticallyImplyLeading:
-        false, // Empêcher l'espacement automatique du menu
+            false, // Prevent automatic spacing of the menu
         leading: Builder(
           builder: (context) => IconButton(
             icon: const Icon(Icons.menu, color: Colors.white),
@@ -133,18 +160,18 @@ class _HomePageState extends State<HomePage> {
         ),
         title: Row(
           children: [
-            // Image de profil avec taille dynamique réduite
+            // Profile image with dynamic reduced size
             CircleAvatar(
               radius: MediaQuery.of(context).size.width *
-                  0.07, // 6% de la largeur de l'écran
+                  0.07, // 6% of screen width
               backgroundImage: _userProfileImage != null
                   ? NetworkImage(_userProfileImage!)
                   : AssetImage("assets/profile.png"),
             ),
             SizedBox(
                 width: MediaQuery.of(context).size.width *
-                    0.01), // Espacement entre image et texte
-            // Texte du nom d'utilisateur
+                    0.01), // Spacing between image and text
+            // Username text
             Expanded(
               child: Text(
                 _userName ?? "",
@@ -152,20 +179,20 @@ class _HomePageState extends State<HomePage> {
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
                   fontSize: MediaQuery.of(context).size.width *
-                      0.035, // Taille dynamique réduite
-                  overflow: TextOverflow
-                      .ellipsis, // Pour éviter que le texte dépasse l'espace
+                      0.035, // Dynamically reduced size
+                  overflow: TextOverflow.ellipsis, // Prevent text overflow
                 ),
               ),
             ),
-            // Icône favoris alignée à droite avec un espacement réduit
+            // Favorite icon aligned to the right with reduced spacing
             IconButton(
               icon: const Icon(Icons.favorite, color: Colors.white),
               onPressed: () {
-                print('Favoris');
+                Navigator.pushNamed(
+                    context, '/favoris'); // Navigate to favorites page
               },
             ),
-            // Icône panier alignée à droite
+            // Cart icon aligned to the right
             IconButton(
               icon: const Icon(Icons.shopping_cart, color: Colors.white),
               onPressed: () {
@@ -175,50 +202,6 @@ class _HomePageState extends State<HomePage> {
           ],
         ),
       ),
-
-      // return Scaffold(
-      //   drawer: _buildDrawer(),
-      //   appBar: AppBar(
-      //     backgroundColor: const Color(0xFFFCDFDB),
-      //     title: Row(
-      //       children: [
-      //         CircleAvatar(
-      //           radius: MediaQuery.of(context).size.width *
-      //               0.08, // 8% de la largeur de l'écran
-      //           backgroundImage: _userProfileImage != null
-      //               ? NetworkImage(_userProfileImage!)
-      //               : AssetImage("assets/profile.png"),
-      //         ),
-      //         SizedBox(
-      //             width: MediaQuery.of(context).size.width *
-      //                 0.03), // Espacement dynamique
-      //         Text(
-      //           _userName ?? "",
-      //           style: TextStyle(
-      //             color: Colors.white,
-      //             fontWeight: FontWeight.bold,
-      //             fontSize: MediaQuery.of(context).size.width *
-      //                 0.04, // Taille dynamique
-      //           ),
-      //         ),
-      //       ],
-      //     ),
-      //     actions: [
-      //       IconButton(
-      //         icon: const Icon(Icons.favorite, color: Colors.white),
-      //         onPressed: () {
-      //           print('Favoris');
-      //         },
-      //       ),
-      //       IconButton(
-      //         icon: const Icon(Icons.shopping_cart, color: Colors.white),
-      //         onPressed: () {
-      //           Navigator.pushNamed(context, '/cart');
-      //         },
-      //       ),
-      //     ],
-      //   ),
-
       body: Container(
         decoration: const BoxDecoration(
           image: DecorationImage(
@@ -229,13 +212,13 @@ class _HomePageState extends State<HomePage> {
         child: Column(
           children: [
             Padding(
-              padding: EdgeInsets.all(MediaQuery.of(context).size.width *
-                  0.04), // Padding dynamique
+              padding: EdgeInsets.all(
+                  MediaQuery.of(context).size.width * 0.04), // Dynamic padding
               child: Text(
                 'Découvrez nos offres !',
                 style: TextStyle(
-                  fontSize: MediaQuery.of(context).size.width *
-                      0.06, // Taille dynamique
+                  fontSize:
+                      MediaQuery.of(context).size.width * 0.06, // Dynamic size
                   fontWeight: FontWeight.bold,
                   color: const Color(0xFFB50D56),
                 ),
@@ -243,18 +226,18 @@ class _HomePageState extends State<HomePage> {
             ),
             SizedBox(
               height: MediaQuery.of(context).size.height *
-                  0.2, // 20% de la hauteur de l'écran
+                  0.2, // 20% of screen height
               child: SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
                 child: Row(
                   children: _scrollProducts
                       .map((product) => _buildStaticProductCard(
-                    product['name']!,
-                    product['price']!,
-                    product['image']!,
-                    hideDetails: true,
-                    showDiscount: true,
-                  ))
+                            product['name']!,
+                            product['price']!,
+                            product['image']!,
+                            hideDetails: true,
+                            showDiscount: true,
+                          ))
                       .toList(),
                 ),
               ),
@@ -262,12 +245,11 @@ class _HomePageState extends State<HomePage> {
             const SizedBox(height: 16.0),
             Padding(
               padding: EdgeInsets.symmetric(
-                  horizontal: MediaQuery.of(context).size.width *
-                      0.04), // Padding dynamique
+                  horizontal: MediaQuery.of(context).size.width * 0.04),
               child: TextField(
                 controller: _searchController,
                 decoration: InputDecoration(
-                  hintText: 'Rechercher un produit...',
+                  hintText: 'Rechercher un produit par nom ou prix...',
                   prefixIcon: const Icon(Icons.search),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(10.0),
@@ -286,38 +268,63 @@ class _HomePageState extends State<HomePage> {
                     child: Container(
                       color: Colors.white.withOpacity(0.5),
                       padding: EdgeInsets.all(
-                          MediaQuery.of(context).size.width * 0.04), // Dynamic padding
+                          MediaQuery.of(context).size.width * 0.04),
                       child: StreamBuilder<QuerySnapshot>(
-                        stream: FirebaseFirestore.instance.collection('products').snapshots(),
+                        stream: FirebaseFirestore.instance
+                            .collection('products')
+                            .snapshots(),
                         builder: (context, snapshot) {
-                          if (snapshot.connectionState == ConnectionState.waiting) {
-                            return Center(child: CircularProgressIndicator()); // Loading indicator
+                          if (snapshot.connectionState ==
+                              ConnectionState.waiting) {
+                            return Center(child: CircularProgressIndicator());
                           }
                           if (snapshot.hasError) {
-                            return Center(child: Text('Error: ${snapshot.error}')); // Error message
+                            return Center(
+                                child: Text('Erreur: ${snapshot.error}'));
                           }
-                          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                            return Center(child: Text('No products found')); // No products message
+                          if (!snapshot.hasData ||
+                              snapshot.data!.docs.isEmpty) {
+                            return Center(child: Text('Aucun produit trouvé'));
                           }
 
-                          // Map the fetched documents to a list of products
-                          final products = snapshot.data!.docs;
+                          final products = snapshot.data!.docs.map((doc) {
+                            final data = doc.data() as Map<String, dynamic>;
+                            return {
+                              'id': doc.id, // Include the Firestore document ID
+                              'label': data['label'] ?? 'Produit inconnu',
+                              'price': data['price']?.toString() ?? '0',
+                              'imageUrl': data['imageUrl'] ?? 'assets/images/default.png',
+                            };
+                          }).where((product) {
+                            final name = product['label'] ?? '';
+                            final price = product['price']?.toString() ?? '';
+                            return name.toLowerCase().contains(_searchQuery) ||
+                                price.toLowerCase().contains(_searchQuery);
+                          }).toList();
+
 
                           return GridView.builder(
                             itemCount: products.length,
-                            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                              crossAxisCount: MediaQuery.of(context).size.width > 600 ? 3 : 2, // 2 columns for small screens, 3 for larger ones
-                              crossAxisSpacing: MediaQuery.of(context).size.width * 0.04, // Dynamic spacing
-                              mainAxisSpacing: MediaQuery.of(context).size.height * 0.02, // Dynamic spacing
+                            gridDelegate:
+                                SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount:
+                                  MediaQuery.of(context).size.width > 600
+                                      ? 3
+                                      : 2,
+                              crossAxisSpacing:
+                                  MediaQuery.of(context).size.width * 0.04,
+                              mainAxisSpacing:
+                                  MediaQuery.of(context).size.height * 0.02,
                             ),
                             itemBuilder: (context, index) {
-                              final product = products[index].data() as Map<String, dynamic>;
+                              final product = products[index];
                               return _buildProductCard(
-                                product['label'] ?? 'Unknown', // Use brand as product name
-                                product['price']?.toString() ?? '0', // Use price
-                                product['imageUrl'] != null && product['imageUrl'].isNotEmpty
-                                    ? product['imageUrl'] // Use imageUrl if valid
-                                    : 'assets/images/armoire.png', // Default image if not valid
+                                product['label'] ?? 'Inconnu',
+                                product['price'] ?? '0',
+                                product['imageUrl'] ??
+                                    'assets/images/default.png',
+                                productId:
+                                    product['id'], // Passer productId ici
                                 showCartIcon: true,
                               );
                             },
@@ -332,7 +339,8 @@ class _HomePageState extends State<HomePage> {
           ],
         ),
       ),
-      bottomNavigationBar: _buildBottomNavBar(),
+      bottomNavigationBar:
+          _buildBottomNavBar(), // Correct placement of bottomNavigationBar
       floatingActionButton: FloatingActionButton(
         backgroundColor: Colors.pink,
         child: const Icon(Icons.camera_alt),
@@ -356,41 +364,6 @@ class _HomePageState extends State<HomePage> {
               'Catégories',
               style: TextStyle(color: Colors.white, fontSize: 24),
             ),
-          ),
-          ListTile(
-            title: Text('Vêtement'),
-            onTap: () {
-              Navigator.pop(context);
-              _filterByCategory('Vêtement');
-            },
-          ),
-          ListTile(
-            title: Text('Meuble'),
-            onTap: () {
-              Navigator.pop(context);
-              _filterByCategory('Meuble');
-            },
-          ),
-          ListTile(
-            title: Text('Livres'),
-            onTap: () {
-              Navigator.pop(context);
-              _filterByCategory('Livres');
-            },
-          ),
-          ListTile(
-            title: Text('Vaisselle'),
-            onTap: () {
-              Navigator.pop(context);
-              _filterByCategory('Vaisselle');
-            },
-          ),
-          ListTile(
-            title: Text('Électroménager'),
-            onTap: () {
-              Navigator.pop(context);
-              _filterByCategory('Électroménager');
-            },
           ),
         ],
       ),
@@ -490,191 +463,242 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  Widget _buildProductCard(String productName, String price, String imagePath,
-      {bool showDiscount = false,
-        bool hideDetails = false,
-        bool showCartIcon = false}) {
+  Widget _buildProductCard(
+    String productName,
+    String price,
+    String imagePath, {
+    required String productId,
+    bool showCartIcon = false,
+    bool showDiscount = false,
+    bool hideDetails = false,
+  }) {
+    bool isFavorite = _favoriteProducts.contains(productId);
+
     return GestureDetector(
-        onTap: () {
-          if (imagePath == 'assets/images/4.png') {
-            Navigator.pushNamed(context, '/infoProd'); // Navigation vers InfoProd
-          }
-        },
-        child: Padding(
-          padding: EdgeInsets.symmetric(
-              horizontal:
-              MediaQuery.of(context).size.width * 0.04), // Padding dynamique
-          child: Card(
-            elevation: 5,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Stack(
-              children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(10),
-                  child: Image.network(
-                    imagePath,
-                    width: MediaQuery.of(context).size.width * 0.4,
-                    height: MediaQuery.of(context).size.height * 0.2,
-                    fit: BoxFit.cover,
+      onTap: () {
+        if (imagePath == 'assets/images/4.png') {
+          Navigator.pushNamed(context, '/infoProd'); // Navigation vers InfoProd
+        }
+      },
+      child: Padding(
+        padding: EdgeInsets.symmetric(
+            horizontal:
+                MediaQuery.of(context).size.width * 0.04), // Padding dynamique
+        child: Card(
+          elevation: 5,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Stack(
+            children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(10),
+                child: Image.network(
+                  imagePath,
+                  width: MediaQuery.of(context).size.width * 0.4,
+                  height: MediaQuery.of(context).size.height * 0.2,
+                  fit: BoxFit.cover,
+                ),
+              ),
+              if (showDiscount)
+                Positioned(
+                  top: 10,
+                  right: 10,
+                  child: Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    color: Colors.red,
+                    child: const Text(
+                      '-50%',
+                      style: TextStyle(
+                          color: Colors.white, fontWeight: FontWeight.bold),
+                    ),
                   ),
                 ),
-                if (showDiscount)
-                  Positioned(
-                    top: 10,
-                    right: 10,
-                    child: Container(
-                      padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      color: Colors.red,
-                      child: const Text(
-                        '-50%',
-                        style: TextStyle(
-                            color: Colors.white, fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                  ),
-                if (!hideDetails)
-                  Positioned(
-                    bottom: 5,
-                    left: 10,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          productName,
-                          style: const TextStyle(
-                            color: Color.fromARGB(255, 251, 251, 251), // Noir pur pour le contraste
-                            fontWeight: FontWeight.bold, // Texte en gras
-                            fontSize: 16, // Taille du texte ajustée pour plus de lisibilité
-                          ),
+              if (!hideDetails)
+                Positioned(
+                  bottom: 5,
+                  left: 10,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        productName,
+                        style: const TextStyle(
+                          color: Color.fromARGB(
+                              255, 251, 251, 251), // Noir pur pour le contraste
+                          fontWeight: FontWeight.bold, // Texte en gras
+                          fontSize:
+                              16, // Taille du texte ajustée pour plus de lisibilité
                         ),
-                        Text(
-                          price,
-                          style: const TextStyle(
-                            color: Color.fromARGB(255, 143, 131, 131), // Noir pur pour le contraste
-                            fontWeight: FontWeight.bold, // Texte en gras
-                            fontSize: 16, // Taille du texte ajustée pour plus de lisibilité
-                          ),
-                        ),
-
-                      ],
-                    ),
-                  ),
-                if (showCartIcon)
-                  Positioned(
-                    top: 5,
-                    right: 5,
-                    child: GestureDetector(
-                      onTap: () {
-                        print('Produit ajouté au panier : $productName');
-                      },
-                      child: const CircleAvatar(
-                        backgroundColor: Colors.white,
-                        radius: 15,
-                        child: Icon(Icons.add_shopping_cart,
-                            color: Colors.pink, size: 18),
                       ),
-                    ),
-                  ),
-              ],
-            ),
-          ),
-        )
-    );}
-
-  Widget _buildStaticProductCard(String productName, String price, String imagePath,
-      {bool showDiscount = false,
-        bool hideDetails = false,
-        bool showCartIcon = false}) {
-    return GestureDetector(
-        onTap: () {
-          if (imagePath == 'assets/images/4.png') {
-            Navigator.pushNamed(context, '/infoProd'); // Navigation vers InfoProd
-          }
-        },
-        child: Padding(
-          padding: EdgeInsets.symmetric(
-              horizontal:
-              MediaQuery.of(context).size.width * 0.04), // Padding dynamique
-          child: Card(
-            elevation: 5,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Stack(
-              children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(10),
-                  child: Image.asset(
-                    imagePath,
-                    width: MediaQuery.of(context).size.width * 0.4,
-                    height: MediaQuery.of(context).size.height * 0.2,
-                    fit: BoxFit.cover,
+                      Text(
+                        price,
+                        style: const TextStyle(
+                          color: Color.fromARGB(
+                              255, 143, 131, 131), // Noir pur pour le contraste
+                          fontWeight: FontWeight.bold, // Texte en gras
+                          fontSize:
+                              16, // Taille du texte ajustée pour plus de lisibilité
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                if (showDiscount)
-                  Positioned(
-                    top: 10,
-                    right: 10,
-                    child: Container(
-                      padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      color: Colors.red,
-                      child: const Text(
-                        '-50%',
-                        style: TextStyle(
-                            color: Colors.white, fontWeight: FontWeight.bold),
-                      ),
+              if (showCartIcon)
+                Positioned(
+                  top: 5,
+                  right: 5,
+                  child: GestureDetector(
+                    onTap: () {
+                      print('Produit ajouté au panier : $productName');
+                    },
+                    child: const CircleAvatar(
+                      backgroundColor: Colors.white,
+                      radius: 15,
+                      child: Icon(Icons.add_shopping_cart,
+                          color: Colors.pink, size: 18),
                     ),
                   ),
-                if (!hideDetails)
-                  Positioned(
-                    bottom: 5,
-                    left: 10,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          productName,
-                          style: const TextStyle(
-                            color: Color.fromARGB(255, 251, 251, 251), // Noir pur pour le contraste
-                            fontWeight: FontWeight.bold, // Texte en gras
-                            fontSize: 16, // Taille du texte ajustée pour plus de lisibilité
-                          ),
-                        ),
-                        Text(
-                          price,
-                          style: const TextStyle(
-                            color: Color.fromARGB(255, 143, 131, 131), // Noir pur pour le contraste
-                            fontWeight: FontWeight.bold, // Texte en gras
-                            fontSize: 16, // Taille du texte ajustée pour plus de lisibilité
-                          ),
-                        ),
-
-                      ],
-                    ),
+                ),
+              Positioned(
+                top: 5,
+                left: 5,
+                child: IconButton(
+                  icon: Icon(
+                    _favoriteProducts.contains(productId)
+                        ? Icons.favorite
+                        : Icons.favorite_border,
+                    color: isFavorite
+                        ? const Color.fromARGB(255, 156, 8, 77)
+                        : Colors.white,
                   ),
-                if (showCartIcon)
-                  Positioned(
-                    top: 5,
-                    right: 5,
-                    child: GestureDetector(
-                      onTap: () {
-                        print('Produit ajouté au panier : $productName');
-                      },
-                      child: const CircleAvatar(
-                        backgroundColor: Colors.white,
-                        radius: 15,
-                        child: Icon(Icons.add_shopping_cart,
-                            color: Colors.pink, size: 18),
-                      ),
-                    ),
-                  ),
-              ],
-            ),
+                  onPressed: () {
+                    setState(() {
+                      if (isFavorite) {
+                        _favoriteProducts
+                            .remove(productId); // Retirer localement
+                        _removeFavoriteFromFirestore(productId, productName); //
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                              content: Text(
+                                  'Produit supprimé des favoris avec succès')),
+                        );
+                      } else {
+                        _favoriteProducts
+                            .add(productId); // Ajouter au favori local
+                        _addFavoriteToFirestore(productId, productName);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                              content: Text(
+                                  'Produit ajouté aux favoris avec succès')),
+                        );
+                      }
+                    });
+                  },
+                ),
+              ),
+            ],
           ),
-        )
-    );}
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStaticProductCard(
+      String productName, String price, String imagePath,
+      {bool showDiscount = false,
+      bool hideDetails = false,
+      bool showCartIcon = false}) {
+    return GestureDetector(
+      onTap: () {
+        // Navigate to product details or another action if needed
+      },
+      child: Padding(
+        padding: EdgeInsets.symmetric(
+            horizontal:
+                MediaQuery.of(context).size.width * 0.04), // Padding dynamique
+        child: Card(
+          elevation: 5,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Stack(
+            children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(10),
+                child: Image.asset(
+                  imagePath,
+                  width: MediaQuery.of(context).size.width * 0.4,
+                  height: MediaQuery.of(context).size.height * 0.2,
+                  fit: BoxFit.cover,
+                ),
+              ),
+              if (showDiscount)
+                Positioned(
+                  top: 10,
+                  right: 10,
+                  child: Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    color: Colors.red,
+                    child: const Text(
+                      '-50%',
+                      style: TextStyle(
+                          color: Colors.white, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                ),
+              if (!hideDetails)
+                Positioned(
+                  bottom: 5,
+                  left: 10,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        productName,
+                        style: const TextStyle(
+                          color: Color.fromARGB(
+                              255, 251, 251, 251), // Noir pur pour le contraste
+                          fontWeight: FontWeight.bold, // Texte en gras
+                          fontSize:
+                              16, // Taille du texte ajustée pour plus de lisibilité
+                        ),
+                      ),
+                      Text(
+                        price,
+                        style: const TextStyle(
+                          color: Color.fromARGB(
+                              255, 143, 131, 131), // Noir pur pour le contraste
+                          fontWeight: FontWeight.bold, // Texte en gras
+                          fontSize:
+                              16, // Taille du texte ajustée pour plus de lisibilité
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              if (showCartIcon)
+                Positioned(
+                  top: 5,
+                  right: 5,
+                  child: GestureDetector(
+                    onTap: () {
+                      print('Produit ajouté au panier : $productName');
+                    },
+                    child: const CircleAvatar(
+                      backgroundColor: Colors.white,
+                      radius: 15,
+                      child: Icon(Icons.add_shopping_cart,
+                          color: Colors.pink, size: 18),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }

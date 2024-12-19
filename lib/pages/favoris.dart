@@ -6,41 +6,21 @@ import 'package:firebase_auth/firebase_auth.dart';
 class FavorisPage extends StatelessWidget {
   const FavorisPage({super.key});
 
-  // Function to add a favorite item to Firestore
-  Future<void> addFavorite(String userId, Map<String, dynamic> favoriteItem) async {
-    try {
-      await FirebaseFirestore.instance.collection('favorites').doc(userId).set({
-        'favorites': FieldValue.arrayUnion([favoriteItem])
-      }, SetOptions(merge: true));
-    } catch (e) {
-      print('Error adding favorite: $e');
-    }
-  }
-
-  // Function to remove a favorite item from Firestore
-  Future<void> removeFavorite(String userId, Map<String, dynamic> favoriteItem) async {
-    try {
-      await FirebaseFirestore.instance.collection('favorites').doc(userId).update({
-        'favorites': FieldValue.arrayRemove([favoriteItem])
-      });
-    } catch (e) {
-      print('Error removing favorite: $e');
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     // Get the current user
     User? user = FirebaseAuth.instance.currentUser;
 
     return Scaffold(
+    
       body: Stack(
         children: [
           // Background image
           Container(
             decoration: const BoxDecoration(
               image: DecorationImage(
-                image: AssetImage('assets/images/background.png'), // Background image
+                image: AssetImage(
+                    'assets/images/background.png'), // Background image
                 fit: BoxFit.cover,
               ),
             ),
@@ -50,21 +30,24 @@ class FavorisPage extends StatelessWidget {
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 40),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center, // Centered horizontally
+                crossAxisAlignment:
+                    CrossAxisAlignment.center, // Centered horizontally
                 children: [
                   // Row for the back arrow
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.start, // Align to the left
+                    mainAxisAlignment:
+                        MainAxisAlignment.start, // Align to the left
                     children: [
                       IconButton(
                         icon: const Icon(Icons.arrow_back, color: Colors.white),
                         onPressed: () {
-                          Navigator.pop(context); // Go back to the previous page
+                          Navigator.pop(
+                              context); // Go back to the previous page
                         },
                       ),
                     ],
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height:5),
                   // Centered title
                   const Padding(
                     padding: EdgeInsets.all(8.0),
@@ -78,14 +61,15 @@ class FavorisPage extends StatelessWidget {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 12), // Space between title and image
+                  const SizedBox(height:5), // Space between title and image
                   // Centered image
                   Container(
-                    width: 120, // Reduced width for the image
-                    height: 120, // Reduced height for the image
+                    width: 250, 
+                    height: 200,
                     decoration: const BoxDecoration(
                       image: DecorationImage(
-                        image: AssetImage('assets/images/favoris.png'), // Added image
+                        image: AssetImage(
+                            'assets/images/favoris.png'), // Added image
                         fit: BoxFit.cover,
                       ),
                     ),
@@ -93,7 +77,7 @@ class FavorisPage extends StatelessWidget {
                   const SizedBox(height: 16), // Space between image and list
                   // Section for favorite items
                   Container(
-                    height: 250, // Height for the favorites section
+                    height: 500, // Height for the favorites section
                     padding: const EdgeInsets.all(16.0),
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(10),
@@ -113,74 +97,138 @@ class FavorisPage extends StatelessWidget {
                                   color: Color(0xFFB50D56),
                                 ),
                               ),
-                              const SizedBox(height: 16), // Space between title and list
+                              const SizedBox(
+                                  height: 16), // Space between title and list
                               // Fetch and display favorite items from Firestore
                               Expanded(
                                 child: StreamBuilder<DocumentSnapshot>(
                                   stream: FirebaseFirestore.instance
                                       .collection('favorites')
-                                      .doc(user?.uid) // Get the user's favorites document
+                                      .doc(user?.uid)
                                       .snapshots(),
                                   builder: (context, snapshot) {
-                                    if (snapshot.connectionState == ConnectionState.waiting) {
-                                      return const Center(child: CircularProgressIndicator()); // Loading indicator
-                                    }
-                                    if (!snapshot.hasData || !snapshot.data!.exists) {
-                                      return const Center(child: Text('Aucun favori trouvé.'));
+                                    // Si les données ne sont pas encore disponibles, afficher un indicateur de chargement
+                                    if (snapshot.connectionState ==
+                                        ConnectionState.waiting) {
+                                      return const Center(
+                                          child: CircularProgressIndicator());
                                     }
 
-                                    // Extract the favorites list from the document
-                                    List<dynamic> favorites = snapshot.data!['favorites'] ?? [];
+                                    // Si le document n'existe pas ou n'a pas de données
+                                    if (!snapshot.hasData ||
+                                        !snapshot.data!.exists) {
+                                      return const Center(
+                                          child: Text('Aucun favori trouvé.'));
+                                    }
 
+                                    // Vérifier et récupérer la liste de favoris (un tableau d'objets)
+                                    List<Map<String, dynamic>> favorites = [];
+                                    if (snapshot.data!['favorites'] is List) {
+                                      favorites =
+                                          List<Map<String, dynamic>>.from(
+                                              snapshot.data!['favorites']);
+                                    }
+
+                                    // Si 'favorites' est vide ou non disponible, retourner un message
                                     if (favorites.isEmpty) {
-                                      return const Center(child: Text('Aucun favori trouvé.'));
+                                      return const Center(
+                                          child: Text('Aucun favori trouvé.'));
                                     }
 
-                                    return ListView.builder(
-                                      itemCount: favorites.length,
-                                      itemBuilder: (context, index) {
-                                        // Ensure that each favorite item is a map
-                                        final favori = favorites[index];
-                                        if (favori is Map<String, dynamic>) {
-                                          // Use null checks and default values
-                                          String itemName = favori['item'] ?? 'Nom inconnu'; // Default value if null
-                                          String itemImage = favori['image'] ?? 'default_image_url'; // Default image if null
-                                          String itemDate = favori['date'] ?? 'Date inconnue'; // Default date if null
+                                    // Extraire les IDs des favoris en tant que chaînes
+                                    List<String> favoriteIds = favorites
+                                        .map((item) =>
+                                            item['id']?.toString() ?? '')
+                                        .where((id) => id
+                                            .isNotEmpty) // On s'assure de ne pas avoir d'ID vide
+                                        .toList();
 
-                                          return Card(
-                                            margin: const EdgeInsets.symmetric(vertical: 8),
-                                            child: ListTile(
-                                              leading: ClipRRect(
-                                                borderRadius: BorderRadius.circular(8),
-                                                child: Image.network(
-                                                  itemImage, // Use network image for dynamic loading
+                                    // Si aucun ID n'est disponible, retournez un message d'erreur
+                                    if (favoriteIds.isEmpty) {
+                                      return const Center(
+                                          child: Text(
+                                              'Aucun produit favori trouvé.'));
+                                    }
+
+                                    // Requête pour récupérer les détails des produits en fonction des IDs
+                                    return FutureBuilder<QuerySnapshot>(
+                                      future: FirebaseFirestore.instance
+                                          .collection('products')
+                                          .where(FieldPath.documentId,
+                                              whereIn: favoriteIds)
+                                          .get(),
+                                      builder: (context, productSnapshot) {
+                                        // Si les produits ne sont pas encore récupérés, afficher un indicateur de chargement
+                                        if (productSnapshot.connectionState ==
+                                            ConnectionState.waiting) {
+                                          return const Center(
+                                              child:
+                                                  CircularProgressIndicator());
+                                        }
+
+                                        // Si aucun produit n'est trouvé, afficher un message
+                                        if (!productSnapshot.hasData ||
+                                            productSnapshot
+                                                .data!.docs.isEmpty) {
+                                          return const Center(
+                                              child: Text(
+                                                  'Aucun produit favori trouvé.'));
+                                        }
+
+                                        // Récupérer les informations des produits
+                                        final products = productSnapshot
+                                            .data!.docs
+                                            .map((doc) {
+                                          final data = doc.data()
+                                              as Map<String, dynamic>;
+                                          return {
+                                            'id': doc.id,
+                                            'label': data['label'] ??
+                                                'Produit inconnu',
+                                            'price':
+                                                data['price']?.toString() ??
+                                                    '0',
+                                            'imageUrl': data['imageUrl'] ??
+                                                'assets/images/default.png',
+                                          };
+                                        }).toList();
+
+                                        // Afficher les produits dans une liste
+                                        return ListView.builder(
+                                          itemCount: products.length,
+                                          itemBuilder: (context, index) {
+                                            final product = products[index];
+                                            return Card(
+                                              margin:
+                                                  const EdgeInsets.symmetric(
+                                                      vertical: 8),
+                                              child: ListTile(
+                                                leading: Image.network(
+                                                  product['imageUrl'],
                                                   width: 50,
                                                   height: 50,
                                                   fit: BoxFit.cover,
                                                 ),
-                                              ),
-                                              title: Text(itemName), // Use the safe item name
-                                              subtitle: Text(
-                                                'Date: $itemDate', // Use the safe date
-                                                style: const TextStyle(fontSize: 12),
-                                              ),
-                                              trailing: IconButton(
-                                                icon: const Icon(Icons.delete, color: Colors.red),
-                                                onPressed: () {
-                                                  // Remove the favorite item from Firestore
-                                                  removeFavorite(user!.uid, favori);
+                                                title: Text(product['label']),
+                                                subtitle: Text(
+                                                    '${product['price']} TND'),
+                                                onTap: () {
+                                                  Navigator.pushNamed(
+                                                    context,
+                                                    '/productDetail',
+                                                    arguments: product,
+                                                  );
                                                 },
                                               ),
-                                            ),
-                                          );
-                                        } else {
-                                          return const SizedBox.shrink(); // Handle unexpected data types
-                                        }
+                                            );
+                                          },
+                                        );
                                       },
                                     );
                                   },
                                 ),
                               ),
+
                             ],
                           ),
                         ),
