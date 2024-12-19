@@ -12,11 +12,12 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance; // Firestore instance
+  final FirebaseFirestore _firestore =
+      FirebaseFirestore.instance; // Firestore instance
   String? _userName;
   String? _userProfileImage;
   bool isLoading = true;
-  Set<String> _favoriteProducts = {}; // Track favorite products
+  final Set<String> _favoriteProducts = {}; // Track favorite products
 
   final List<Map<String, String>> _scrollProducts = [
     {'name': 'Produit 1', 'price': '20 TND', 'image': 'assets/images/1.png'},
@@ -25,27 +26,18 @@ class _HomePageState extends State<HomePage> {
     {'name': 'Produit 5', 'price': '100 TND', 'image': 'assets/images/5.png'},
   ];
 
-  final List<Map<String, String>> _blurProducts = [
-    {'name': 'Pyjama', 'price': '30 TND', 'image': 'assets/images/4.png'},
-    {'name': 'Manteau', 'price': '50 TND', 'image': 'assets/images/5.png'},
-    {'name': 'Les misérables', 'price': '80 TND', 'image': 'assets/images/6.png'},
-    {'name': 'Armoire', 'price': '200 TND', 'image': 'assets/images/7.png'},
-  ];
-
   final TextEditingController _searchController = TextEditingController();
   List<Map<String, String>> _filteredProducts = [];
 
   @override
   void initState() {
     super.initState();
-    _filteredProducts = List.from(_blurProducts);
-    _searchController.addListener(_filterProducts);
+
     _initUser();
   }
 
   @override
   void dispose() {
-    _searchController.removeListener(_filterProducts);
     _searchController.dispose();
     super.dispose();
   }
@@ -54,12 +46,14 @@ class _HomePageState extends State<HomePage> {
     User? user = _auth.currentUser;
     if (user != null) {
       try {
-        DocumentSnapshot userDoc = await _firestore.collection('users').doc(user.uid).get();
+        DocumentSnapshot userDoc =
+            await _firestore.collection('users').doc(user.uid).get();
 
         if (userDoc.exists) {
           setState(() {
             _userName = userDoc['nom'] + ' ' + userDoc['prenom'] ?? 'User';
-            _userProfileImage = userDoc['profileImage'] ?? 'assets/images/default_profile.png';
+            _userProfileImage =
+                userDoc['profileImage'] ?? 'assets/images/default_profile.png';
             isLoading = false;
           });
         }
@@ -69,40 +63,14 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  void _filterByCategory(String category) {
-    setState(() {
-      if (category == 'Vêtement') {
-        _filteredProducts = _blurProducts
-            .where((product) => product['image'] == 'assets/images/4.png' || product['image'] == 'assets/images/5.png')
-            .toList();
-      } else if (category == 'Meuble') {
-        _filteredProducts = _blurProducts
-            .where((product) => product['image'] == 'assets/images/7.png')
-            .toList();
-      } else if (category == 'Livres') {
-        _filteredProducts = _blurProducts
-            .where((product) => product['image'] == 'assets/images/6.png')
-            .toList();
-      } else if (category == 'Vaisselle' || category == 'Électroménager') {
-        _filteredProducts = [];
-      }
-    });
-  }
-
-  void _filterProducts() {
-    final query = _searchController.text.toLowerCase();
-    setState(() {
-      _filteredProducts = _blurProducts
-          .where((product) => product['name']!.toLowerCase().contains(query) || product['price']!.contains(query)) // Allow filtering by price
-          .toList();
-    });
-  }
-
   Future<void> _addFavoriteToFirestore(String productName) async {
     User? user = _auth.currentUser;
     if (user != null) {
       try {
-        await FirebaseFirestore.instance.collection('favorites').doc(user.uid).set({
+        await FirebaseFirestore.instance
+            .collection('favorites')
+            .doc(user.uid)
+            .set({
           'favorites': FieldValue.arrayUnion([productName])
         }, SetOptions(merge: true));
       } catch (e) {
@@ -115,7 +83,10 @@ class _HomePageState extends State<HomePage> {
     User? user = _auth.currentUser;
     if (user != null) {
       try {
-        await FirebaseFirestore.instance.collection('favorites').doc(user.uid).update({
+        await FirebaseFirestore.instance
+            .collection('favorites')
+            .doc(user.uid)
+            .update({
           'favorites': FieldValue.arrayRemove([productName])
         });
       } catch (e) {
@@ -138,31 +109,39 @@ class _HomePageState extends State<HomePage> {
       drawer: _buildDrawer(),
       appBar: AppBar(
         backgroundColor: const Color(0xFFFCDFDB),
-        automaticallyImplyLeading: false, // Prevent automatic spacing of the menu
+        automaticallyImplyLeading:
+            false, // Prevent automatic spacing of the menu
         leading: Builder(
           builder: (context) => IconButton(
             icon: const Icon(Icons.menu, color: Colors.white),
             onPressed: () {
-              Scaffold.of(context).openDrawer();
-            },
+                setState(() {
+                  if (isFavorite) {
+                    _favoriteProducts.remove(productName);
+                    _removeFavoriteFromFirestore(productName);
+                  } else {
+                    _favoriteProducts.add(productName);
+                    _addFavoriteToFirestore(productName, price, imagePath);
+                  }
+                });
+              }
+
+
           ),
         ),
         title: Row(
           children: [
             // Profile image with dynamic reduced size
-            GestureDetector(
-              onTap: () {
-                // Navigate to the profile page when the profile image is tapped
-                Navigator.pushNamed(context, '/profile'); // Ensure '/profile' route is defined in your routes
-              },
-              child: CircleAvatar(
-                radius: MediaQuery.of(context).size.width * 0.07, // 6% of screen width
-                backgroundImage: _userProfileImage != null
-                    ? NetworkImage(_userProfileImage!)
-                    : AssetImage("assets/profile.png"),
-              ),
+            CircleAvatar(
+              radius: MediaQuery.of(context).size.width *
+                  0.07, // 6% of screen width
+              backgroundImage: _userProfileImage != null
+                  ? NetworkImage(_userProfileImage!)
+                  : AssetImage("assets/profile.png"),
             ),
-            SizedBox(width: MediaQuery.of(context).size.width * 0.01), // Spacing between image and text
+            SizedBox(
+                width: MediaQuery.of(context).size.width *
+                    0.01), // Spacing between image and text
             // Username text
             Expanded(
               child: Text(
@@ -170,7 +149,8 @@ class _HomePageState extends State<HomePage> {
                 style: TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
-                  fontSize: MediaQuery.of(context).size.width * 0.035, // Dynamically reduced size
+                  fontSize: MediaQuery.of(context).size.width *
+                      0.035, // Dynamically reduced size
                   overflow: TextOverflow.ellipsis, // Prevent text overflow
                 ),
               ),
@@ -179,7 +159,8 @@ class _HomePageState extends State<HomePage> {
             IconButton(
               icon: const Icon(Icons.favorite, color: Colors.white),
               onPressed: () {
-                Navigator.pushNamed(context, '/favoris'); // Navigate to favorites page
+                Navigator.pushNamed(
+                    context, '/favoris'); // Navigate to favorites page
               },
             ),
             // Cart icon aligned to the right
@@ -202,36 +183,41 @@ class _HomePageState extends State<HomePage> {
         child: Column(
           children: [
             Padding(
-              padding: EdgeInsets.all(MediaQuery.of(context).size.width * 0.04), // Dynamic padding
+              padding: EdgeInsets.all(
+                  MediaQuery.of(context).size.width * 0.04), // Dynamic padding
               child: Text(
                 'Découvrez nos offres !',
                 style: TextStyle(
-                  fontSize: MediaQuery.of(context).size.width * 0.06, // Dynamic size
+                  fontSize:
+                      MediaQuery.of(context).size.width * 0.06, // Dynamic size
                   fontWeight: FontWeight.bold,
                   color: const Color(0xFFB50D56),
                 ),
               ),
             ),
             SizedBox(
-              height: MediaQuery.of(context).size.height * 0.2, // 20% of screen height
+              height: MediaQuery.of(context).size.height *
+                  0.2, // 20% of screen height
               child: SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
                 child: Row(
                   children: _scrollProducts
                       .map((product) => _buildStaticProductCard(
-                    product['name']!,
-                    product['price']!,
-                    product['image']!,
-                    hideDetails: true,
-                    showDiscount: true,
-                  ))
+                            product['name']!,
+                            product['price']!,
+                            product['image']!,
+                            hideDetails: true,
+                            showDiscount: true,
+                          ))
                       .toList(),
                 ),
               ),
             ),
             const SizedBox(height: 16.0),
             Padding(
-              padding: EdgeInsets.symmetric(horizontal: MediaQuery.of(context).size.width * 0.04), // Dynamic padding
+              padding: EdgeInsets.symmetric(
+                  horizontal: MediaQuery.of(context).size.width *
+                      0.04), // Dynamic padding
               child: TextField(
                 controller: _searchController,
                 decoration: InputDecoration(
@@ -253,18 +239,30 @@ class _HomePageState extends State<HomePage> {
                     filter: ImageFilter.blur(sigmaX: 10.0, sigmaY: 10.0),
                     child: Container(
                       color: Colors.white.withOpacity(0.5),
-                      padding: EdgeInsets.all(MediaQuery.of(context).size.width * 0.04), // Dynamic padding
+                      padding: EdgeInsets.all(
+                          MediaQuery.of(context).size.width *
+                              0.04), // Dynamic padding
                       child: StreamBuilder<QuerySnapshot>(
-                        stream: FirebaseFirestore.instance.collection('products').snapshots(),
+                        stream: FirebaseFirestore.instance
+                            .collection('products')
+                            .snapshots(),
                         builder: (context, snapshot) {
-                          if (snapshot.connectionState == ConnectionState.waiting) {
-                            return Center(child: CircularProgressIndicator()); // Loading indicator
+                          if (snapshot.connectionState ==
+                              ConnectionState.waiting) {
+                            return Center(
+                                child:
+                                    CircularProgressIndicator()); // Loading indicator
                           }
                           if (snapshot.hasError) {
-                            return Center(child: Text('Error: ${snapshot.error}')); // Error message
+                            return Center(
+                                child: Text(
+                                    'Error: ${snapshot.error}')); // Error message
                           }
-                          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                            return Center(child: Text('No products found')); // No products message
+                          if (!snapshot.hasData ||
+                              snapshot.data!.docs.isEmpty) {
+                            return Center(
+                                child: Text(
+                                    'No products found')); // No products message
                           }
 
                           // Map the fetched documents to a list of products
@@ -272,20 +270,33 @@ class _HomePageState extends State<HomePage> {
 
                           return GridView.builder(
                             itemCount: products.length,
-                            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                              crossAxisCount: MediaQuery.of(context).size.width > 600 ? 3 : 2, // 2 columns for small screens, 3 for larger ones
-                              crossAxisSpacing: MediaQuery.of(context).size.width * 0.04, // Dynamic spacing
-                              mainAxisSpacing: MediaQuery.of(context).size.height * 0.02, // Dynamic spacing
+                            gridDelegate:
+                                SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: MediaQuery.of(context)
+                                          .size
+                                          .width >
+                                      600
+                                  ? 3
+                                  : 2, // 2 columns for small screens, 3 for larger ones
+                              crossAxisSpacing:
+                                  MediaQuery.of(context).size.width *
+                                      0.04, // Dynamic spacing
+                              mainAxisSpacing:
+                                  MediaQuery.of(context).size.height *
+                                      0.02, // Dynamic spacing
                             ),
                             itemBuilder: (context, index) {
-                              final product = products[index].data() as Map<String, dynamic>;
+                              final product = products[index].data()
+                                  as Map<String, dynamic>;
                               return _buildProductCard(
-                                product['label'] ?? 'Unknown', // Use brand as product name
-                                product['price']?.toString() ?? '0', // Use price
-                                product['imageUrl'] != null && product['imageUrl'].isNotEmpty
-                                    ? product['imageUrl'] // Use imageUrl if valid
-                                    : 'assets/images/armoire.png', // Default image if not valid
-                                showCartIcon: true,
+                                product['label'] ??
+                                    'Nom inconnu', // Nom du produit
+                                product['price']?.toString() ??
+                                    '0', // Prix du produit
+                                product['imageUrl'] ??
+                                    'assets/images/default.png', // Image du produit
+                                showCartIcon:
+                                    true, // Autres paramètres si nécessaire
                               );
                             },
                           );
@@ -323,41 +334,6 @@ class _HomePageState extends State<HomePage> {
               'Catégories',
               style: TextStyle(color: Colors.white, fontSize: 24),
             ),
-          ),
-          ListTile(
-            title: Text('Vêtement'),
-            onTap: () {
-              Navigator.pop(context);
-              _filterByCategory('Vêtement');
-            },
-          ),
-          ListTile(
-            title: Text('Meuble'),
-            onTap: () {
-              Navigator.pop(context);
-              _filterByCategory('Meuble');
-            },
-          ),
-          ListTile(
-            title: Text('Livres'),
-            onTap: () {
-              Navigator.pop(context);
-              _filterByCategory('Livres');
-            },
-          ),
-          ListTile(
-            title: Text('Vaisselle'),
-            onTap: () {
-              Navigator.pop(context);
-              _filterByCategory('Vaisselle');
-            },
-          ),
-          ListTile(
-            title: Text('Électroménager'),
-            onTap: () {
-              Navigator.pop(context);
-              _filterByCategory('Électroménager');
-            },
           ),
         ],
       ),
@@ -457,9 +433,15 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  Widget _buildProductCard(String productName, String price, String imagePath,
-      {bool showDiscount = false, bool hideDetails = false, bool showCartIcon = false}) {
-    bool isFavorite = _favoriteProducts.contains(productName); // Check if the product is favorited
+  Widget _buildProductCard(
+    String productName,
+    String price,
+    String imagePath, {
+    bool showDiscount = false,
+    bool hideDetails = false,
+    bool showCartIcon = false,
+  }) {
+    bool isFavorite = _favoriteProducts.contains(productName);
 
     return GestureDetector(
       onTap: () {
@@ -468,7 +450,9 @@ class _HomePageState extends State<HomePage> {
         }
       },
       child: Padding(
-        padding: EdgeInsets.symmetric(horizontal: MediaQuery.of(context).size.width * 0.04), // Padding dynamique
+        padding: EdgeInsets.symmetric(
+            horizontal:
+                MediaQuery.of(context).size.width * 0.04), // Padding dynamique
         child: Card(
           elevation: 5,
           shape: RoundedRectangleBorder(
@@ -490,11 +474,13 @@ class _HomePageState extends State<HomePage> {
                   top: 10,
                   right: 10,
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     color: Colors.red,
                     child: const Text(
                       '-50%',
-                      style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                          color: Colors.white, fontWeight: FontWeight.bold),
                     ),
                   ),
                 ),
@@ -508,17 +494,21 @@ class _HomePageState extends State<HomePage> {
                       Text(
                         productName,
                         style: const TextStyle(
-                          color: Color.fromARGB(255, 251, 251, 251), // Noir pur pour le contraste
+                          color: Color.fromARGB(
+                              255, 251, 251, 251), // Noir pur pour le contraste
                           fontWeight: FontWeight.bold, // Texte en gras
-                          fontSize: 16, // Taille du texte ajustée pour plus de lisibilité
+                          fontSize:
+                              16, // Taille du texte ajustée pour plus de lisibilité
                         ),
                       ),
                       Text(
                         price,
                         style: const TextStyle(
-                          color: Color.fromARGB(255, 143, 131, 131), // Noir pur pour le contraste
+                          color: Color.fromARGB(
+                              255, 143, 131, 131), // Noir pur pour le contraste
                           fontWeight: FontWeight.bold, // Texte en gras
-                          fontSize: 16, // Taille du texte ajustée pour plus de lisibilité
+                          fontSize:
+                              16, // Taille du texte ajustée pour plus de lisibilité
                         ),
                       ),
                     ],
@@ -535,7 +525,8 @@ class _HomePageState extends State<HomePage> {
                     child: const CircleAvatar(
                       backgroundColor: Colors.white,
                       radius: 15,
-                      child: Icon(Icons.add_shopping_cart, color: Colors.pink, size: 18),
+                      child: Icon(Icons.add_shopping_cart,
+                          color: Colors.pink, size: 18),
                     ),
                   ),
                 ),
@@ -551,16 +542,39 @@ class _HomePageState extends State<HomePage> {
                     setState(() {
                       if (isFavorite) {
                         _favoriteProducts.remove(productName);
-                        _removeFavoriteFromFirestore(productName); // Remove from Firestore
+                        _removeFavoriteFromFirestore(
+                            productName); // Remove from Firestore
                         ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Produit retiré des favoris avec succès')),
+                          SnackBar(
+                              content: Text(
+                                  'Produit retiré des favoris avec succès')),
                         );
                       } else {
                         _favoriteProducts.add(productName);
-                        _addFavoriteToFirestore(productName); // Add to Firestore
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Produit ajouté aux favoris avec succès')),
-                        );
+                        Future<void> _addFavoriteToFirestore(String productName,
+                            String price, String imagePath) async {
+                          User? user = _auth.currentUser;
+                          if (user != null) {
+                            try {
+                              await FirebaseFirestore.instance
+                                  .collection('favorites')
+                                  .doc(user.uid)
+                                  .set({
+                                'favorites': FieldValue.arrayUnion([
+                                  {
+                                    'name': productName,
+                                    'price': price,
+                                    'image': imagePath,
+                                  }
+                                ])
+                              }, SetOptions(merge: true));
+                            } catch (e) {
+                              print('Error adding favorite: $e');
+                            }
+                          }
+                        }
+
+
                       }
                     });
                   },
@@ -573,14 +587,19 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildStaticProductCard(String productName, String price, String imagePath,
-      {bool showDiscount = false, bool hideDetails = false, bool showCartIcon = false}) {
+  Widget _buildStaticProductCard(
+      String productName, String price, String imagePath,
+      {bool showDiscount = false,
+      bool hideDetails = false,
+      bool showCartIcon = false}) {
     return GestureDetector(
       onTap: () {
         // Navigate to product details or another action if needed
       },
       child: Padding(
-        padding: EdgeInsets.symmetric(horizontal: MediaQuery.of(context).size.width * 0.04), // Padding dynamique
+        padding: EdgeInsets.symmetric(
+            horizontal:
+                MediaQuery.of(context).size.width * 0.04), // Padding dynamique
         child: Card(
           elevation: 5,
           shape: RoundedRectangleBorder(
@@ -602,11 +621,13 @@ class _HomePageState extends State<HomePage> {
                   top: 10,
                   right: 10,
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     color: Colors.red,
                     child: const Text(
                       '-50%',
-                      style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                          color: Colors.white, fontWeight: FontWeight.bold),
                     ),
                   ),
                 ),
@@ -620,17 +641,21 @@ class _HomePageState extends State<HomePage> {
                       Text(
                         productName,
                         style: const TextStyle(
-                          color: Color.fromARGB(255, 251, 251, 251), // Noir pur pour le contraste
+                          color: Color.fromARGB(
+                              255, 251, 251, 251), // Noir pur pour le contraste
                           fontWeight: FontWeight.bold, // Texte en gras
-                          fontSize: 16, // Taille du texte ajustée pour plus de lisibilité
+                          fontSize:
+                              16, // Taille du texte ajustée pour plus de lisibilité
                         ),
                       ),
                       Text(
                         price,
                         style: const TextStyle(
-                          color: Color.fromARGB(255, 143, 131, 131), // Noir pur pour le contraste
+                          color: Color.fromARGB(
+                              255, 143, 131, 131), // Noir pur pour le contraste
                           fontWeight: FontWeight.bold, // Texte en gras
-                          fontSize: 16, // Taille du texte ajustée pour plus de lisibilité
+                          fontSize:
+                              16, // Taille du texte ajustée pour plus de lisibilité
                         ),
                       ),
                     ],
@@ -647,7 +672,8 @@ class _HomePageState extends State<HomePage> {
                     child: const CircleAvatar(
                       backgroundColor: Colors.white,
                       radius: 15,
-                      child: Icon(Icons.add_shopping_cart, color: Colors.pink, size: 18),
+                      child: Icon(Icons.add_shopping_cart,
+                          color: Colors.pink, size: 18),
                     ),
                   ),
                 ),
